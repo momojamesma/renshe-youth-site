@@ -649,6 +649,9 @@ button {
 }
 
 .publication-item {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   background: rgba(255, 252, 247, 0.78);
 }
 
@@ -664,7 +667,24 @@ button {
 }
 
 .publication-link {
-  margin-top: 18px;
+  margin-top: auto;
+  padding-top: 18px;
+  color: var(--forest);
+  font-weight: 800;
+  align-self: flex-start;
+}
+
+.publication-item .inline-link {
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(35, 66, 58, 0.08);
+  color: var(--forest);
+}
+
+.publication-item .inline-link:hover {
+  background: rgba(35, 66, 58, 0.14);
+  color: #173129;
 }
 
 .publication-page {
