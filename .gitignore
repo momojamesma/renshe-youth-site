@@ -7,4 +7,5 @@ Thumbs.db
 .render/
 cloudflared.log
 .portable/
+.render-cli/
 instagram-youth-hss.html
