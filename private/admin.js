@@ -13,9 +13,9 @@ const createAdminButton = document.getElementById("create-admin-button");
 
 let currentData = null;
 let currentAdminUsername = "";
-const PROTECTED_ADMIN_USERNAME = "renshe_admin";
 
 const ADMIN_USERNAME_RULE = /^[A-Za-z0-9._]{1,30}$/;
+const PROTECTED_ADMIN_USERNAME = "renshe_admin";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -46,7 +46,7 @@ function createPublicationFields(item, index) {
   return `
     <article class="publication-editor-item">
       <div class="editor-item-header">
-        <h3>專刊 ${index + 1}</h3>
+        <h3>刊物 ${index + 1}</h3>
         <button class="button secondary delete-publication-button" type="button" data-remove-id="${item.id}">刪除</button>
       </div>
       <label>
@@ -71,8 +71,22 @@ function createPublicationFields(item, index) {
 
 function renderAdminAccounts(admins) {
   adminAccountList.innerHTML = admins
-    .map(
-      (item) => `
+    .map((item) => {
+      const deleteButton =
+        item.username === PROTECTED_ADMIN_USERNAME
+          ? ""
+          : `
+            <button
+              class="button secondary delete-admin-button"
+              type="button"
+              data-username="${escapeHtml(item.username)}"
+              ${item.username === currentAdminUsername ? "disabled" : ""}
+            >
+              刪除管理員
+            </button>
+          `;
+
+      return `
         <article class="publication-editor-item">
           <div class="editor-item-header">
             <div>
@@ -81,22 +95,11 @@ function renderAdminAccounts(admins) {
                 item.createdAt ? new Date(item.createdAt).toLocaleString("zh-TW") : "未提供"
               }</p>
             </div>
-            <button
-              class="button secondary delete-admin-button"
-              type="button"
-              data-username="${escapeHtml(item.username)}"
-              ${
-                item.username === currentAdminUsername || item.username === PROTECTED_ADMIN_USERNAME
-                  ? "disabled"
-                  : ""
-              }
-            >
-              刪除管理員
-            </button>
+            ${deleteButton}
           </div>
         </article>
-      `
-    )
+      `;
+    })
     .join("");
 }
 
@@ -120,15 +123,15 @@ function fillForm(data) {
   currentData = data;
   const donation = getSafeDonation(data);
 
-  document.getElementById("organization-name-input").value = data.organization.name;
-  document.getElementById("organization-tagline-input").value = data.organization.tagline;
-  document.getElementById("organization-mission-input").value = data.organization.mission;
-  document.getElementById("about-paragraph-1").value = data.organization.about[0] || "";
-  document.getElementById("about-paragraph-2").value = data.organization.about[1] || "";
-  document.getElementById("about-paragraph-3").value = data.organization.about[2] || "";
-  document.getElementById("highlight-1").value = data.organization.highlights[0] || "";
-  document.getElementById("highlight-2").value = data.organization.highlights[1] || "";
-  document.getElementById("highlight-3").value = data.organization.highlights[2] || "";
+  document.getElementById("organization-name-input").value = data.organization?.name ?? "";
+  document.getElementById("organization-tagline-input").value = data.organization?.tagline ?? "";
+  document.getElementById("organization-mission-input").value = data.organization?.mission ?? "";
+  document.getElementById("about-paragraph-1").value = data.organization?.about?.[0] ?? "";
+  document.getElementById("about-paragraph-2").value = data.organization?.about?.[1] ?? "";
+  document.getElementById("about-paragraph-3").value = data.organization?.about?.[2] ?? "";
+  document.getElementById("highlight-1").value = data.organization?.highlights?.[0] ?? "";
+  document.getElementById("highlight-2").value = data.organization?.highlights?.[1] ?? "";
+  document.getElementById("highlight-3").value = data.organization?.highlights?.[2] ?? "";
 
   document.getElementById("donation-title-input").value = donation.title;
   document.getElementById("donation-raised-input").value = donation.raised;
@@ -137,11 +140,10 @@ function fillForm(data) {
   document.getElementById("donation-summary-input").value = donation.summary;
   document.getElementById("transfer-bank-name-input").value = donation.bankTransfer.bankName;
   document.getElementById("transfer-account-name-input").value = donation.bankTransfer.accountName;
-  document.getElementById("transfer-account-number-input").value =
-    donation.bankTransfer.accountNumber;
+  document.getElementById("transfer-account-number-input").value = donation.bankTransfer.accountNumber;
   document.getElementById("transfer-note-input").value = donation.bankTransfer.note;
 
-  publicationEditor.innerHTML = data.publications.map(createPublicationFields).join("");
+  publicationEditor.innerHTML = (data.publications || []).map(createPublicationFields).join("");
 }
 
 function collectPublications() {
@@ -156,6 +158,7 @@ function collectPublications() {
 
 function collectOrganization() {
   return {
+    ...(currentData.organization || {}),
     name: document.getElementById("organization-name-input").value.trim(),
     tagline: document.getElementById("organization-tagline-input").value.trim(),
     mission: document.getElementById("organization-mission-input").value.trim(),
@@ -173,13 +176,12 @@ function collectOrganization() {
 }
 
 function collectDonation() {
-  const showTarget = document.getElementById("donation-show-target-input").checked;
-
   return {
+    ...(currentData.donation || {}),
     title: document.getElementById("donation-title-input").value.trim(),
-    raised: Number(document.getElementById("donation-raised-input").value),
+    raised: Number(document.getElementById("donation-raised-input").value || 0),
     target: Number(document.getElementById("donation-target-input").value || 0),
-    showTarget,
+    showTarget: document.getElementById("donation-show-target-input").checked,
     summary: document.getElementById("donation-summary-input").value.trim(),
     bankTransfer: {
       bankName: document.getElementById("transfer-bank-name-input").value.trim(),
@@ -267,7 +269,7 @@ dashboardForm.addEventListener("submit", async (event) => {
   }
 
   fillForm(result);
-  saveMessage.textContent = "內容已更新。";
+  saveMessage.textContent = "內容已儲存。";
 });
 
 addPublicationButton.addEventListener("click", () => {
@@ -284,9 +286,9 @@ addPublicationButton.addEventListener("click", () => {
       ...currentData.publications,
       {
         id: nextId,
-        title: "新專刊標題",
+        title: "新刊物標題",
         tag: "",
-        description: "請輸入專刊說明。",
+        description: "請輸入刊物說明。",
         content: "請輸入完整刊物內容。"
       }
     ]

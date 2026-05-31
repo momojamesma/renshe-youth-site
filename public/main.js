@@ -14,7 +14,7 @@ function renderHighlights(items) {
         <article>
           <p class="panel-label">Focus 0${index + 1}</p>
           <h3>${item}</h3>
-          <p>從青年視角出發，把複雜議題整理成更容易理解、也更值得延伸討論的內容。</p>
+          <p>從青年視角出發，把抽象議題拆成可理解、可討論、可參與的公共內容。</p>
         </article>
       `
     )
@@ -48,25 +48,26 @@ function renderBankTransfer(bankTransfer) {
 function renderDonation(donation) {
   const targetAmount = document.getElementById("target-amount");
   const progressCaption = document.getElementById("progress-caption");
+  const progressBar = document.getElementById("progress-bar");
   const raised = Number(donation.raised) || 0;
   const target = Number(donation.target) || 0;
   const showTarget = donation.showTarget !== false;
 
-  document.getElementById("donation-title").textContent = donation.title;
-  document.getElementById("donation-summary").textContent = donation.summary;
+  document.getElementById("donation-title").textContent = donation.title || "支持人社青年";
+  document.getElementById("donation-summary").textContent = donation.summary || "";
   document.getElementById("raised-amount").textContent = formatCurrency(raised);
 
   if (showTarget && target > 0) {
     const progress = Math.min((raised / target) * 100, 100);
     targetAmount.textContent = `/ ${formatCurrency(target)}`;
     targetAmount.classList.remove("hidden");
-    document.getElementById("progress-bar").style.width = `${progress}%`;
+    progressBar.style.width = `${progress}%`;
     progressCaption.textContent = `目前已達成 ${Math.round(progress)}%`;
   } else {
     targetAmount.textContent = "";
     targetAmount.classList.add("hidden");
-    document.getElementById("progress-bar").style.width = "100%";
-    progressCaption.textContent = "目前顯示累積募得金額";
+    progressBar.style.width = "100%";
+    progressCaption.textContent = "目前顯示已募得金額";
   }
 
   const list = document.getElementById("donation-accounts");
@@ -106,22 +107,22 @@ function renderInstagram(instagram) {
   document.getElementById("ig-posts").textContent = instagram.posts;
   document.getElementById("ig-following").textContent = instagram.following;
   document.getElementById("ig-link").href = instagram.url;
-  document.getElementById("ig-link").textContent = `${instagram.handle} 的內容現場`;
+  document.getElementById("ig-link").textContent = `${instagram.handle} 前往 Instagram`;
 }
 
 function renderHeroStats(data) {
   const container = document.getElementById("hero-stats");
-  const target = Number(data.donation.target) || 0;
-  const raised = Number(data.donation.raised) || 0;
+  const target = Number(data.donation?.target) || 0;
+  const raised = Number(data.donation?.raised) || 0;
   const progress =
-    data.donation.showTarget !== false && target > 0 ? Math.round((raised / target) * 100) : null;
+    data.donation?.showTarget !== false && target > 0 ? Math.round((raised / target) * 100) : null;
 
   const stats = [
-    { value: `${data.organization.themes?.length || 0}+`, label: "追蹤核心議題" },
-    { value: `${data.publications.length}`, label: "專刊與長文整理" },
+    { value: `${data.organization?.themes?.length || 0}+`, label: "關注議題" },
+    { value: `${data.publications?.length || 0}`, label: "刊物與文章" },
     {
       value: progress === null ? formatCurrency(raised) : `${progress}%`,
-      label: progress === null ? "目前累積募得" : "募款進度"
+      label: progress === null ? "目前募得" : "募款進度"
     }
   ];
 

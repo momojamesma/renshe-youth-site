@@ -184,6 +184,13 @@ button {
   cursor: pointer;
 }
 
+.dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: default;
+}
+
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 10px);
@@ -195,6 +202,7 @@ button {
   background: rgba(255, 251, 245, 0.96);
   box-shadow: var(--shadow-card);
   display: none;
+  z-index: 20;
 }
 
 .dropdown-menu a {
@@ -205,6 +213,7 @@ button {
 
 .desktop-nav > a:hover,
 .dropdown-toggle:hover,
+.dropdown:hover .dropdown-toggle,
 .dropdown-menu a:hover,
 .mobile-nav a:hover,
 .footer-nav a:hover,
