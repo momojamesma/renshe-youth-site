@@ -32,8 +32,22 @@ const MIME_TYPES = {
   ".ico": "image/x-icon"
 };
 
+const ADMIN_USERNAME_RULE = /^[A-Za-z0-9._]{1,30}$/;
+
 function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
+}
+
+function getAdminCredentialError(username, password) {
+  if (!ADMIN_USERNAME_RULE.test(username)) {
+    return "Username must be 1-30 characters and use only letters, numbers, underscores, or periods.";
+  }
+
+  if (typeof password !== "string" || password.length < 8) {
+    return "Password must be at least 8 characters long.";
+  }
+
+  return "";
 }
 
 function ensureDataDirectory() {
@@ -489,6 +503,12 @@ async function handleApi(req, res, pathname) {
 
       if (!username || !password) {
         sendJson(res, 400, { error: "Username and password are required." });
+        return true;
+      }
+
+      const validationError = getAdminCredentialError(username, password);
+      if (validationError) {
+        sendJson(res, 400, { error: validationError });
         return true;
       }
 

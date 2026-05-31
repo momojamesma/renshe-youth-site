@@ -13,6 +13,20 @@ const createAdminButton = document.getElementById("create-admin-button");
 
 let currentData = null;
 
+const ADMIN_USERNAME_RULE = /^[A-Za-z0-9._]{1,30}$/;
+
+function validateAdminCredentials(username, password) {
+  if (!ADMIN_USERNAME_RULE.test(username)) {
+    return "帳號需為 1 到 30 字元，只能使用英文、數字、底線(_)與句點(.)，不可有空格。";
+  }
+
+  if (typeof password !== "string" || password.length < 8) {
+    return "密碼至少需要 8 碼。";
+  }
+
+  return "";
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -280,6 +294,12 @@ createAdminButton.addEventListener("click", async () => {
   adminMessage.textContent = "";
   const username = document.getElementById("new-admin-username").value.trim();
   const password = document.getElementById("new-admin-password").value;
+  const validationError = validateAdminCredentials(username, password);
+
+  if (validationError) {
+    adminMessage.textContent = validationError;
+    return;
+  }
 
   const response = await fetch("/api/admin/accounts", {
     method: "POST",
