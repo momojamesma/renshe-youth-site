@@ -273,10 +273,9 @@ function sanitizePublicationsInput(current, incoming) {
   return incoming.map((item, index) => ({
     id: Number.isFinite(Number(item.id)) ? Number(item.id) : Date.now() + index,
     title: typeof item.title === "string" ? item.title : "",
-    issue: typeof item.issue === "string" ? item.issue : "",
     description: typeof item.description === "string" ? item.description : "",
-    status: typeof item.status === "string" ? item.status : "",
-    tag: typeof item.tag === "string" ? item.tag : ""
+    tag: typeof item.tag === "string" ? item.tag : "",
+    content: typeof item.content === "string" ? item.content : ""
   }));
 }
 

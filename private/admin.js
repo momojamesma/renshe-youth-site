@@ -38,20 +38,16 @@ function createPublicationFields(item, index) {
         <input type="text" data-field="title" data-id="${item.id}" value="${escapeHtml(item.title)}" required />
       </label>
       <label>
-        期數
-        <input type="text" data-field="issue" data-id="${item.id}" value="${escapeHtml(item.issue)}" required />
-      </label>
-      <label>
         標籤
         <input type="text" data-field="tag" data-id="${item.id}" value="${escapeHtml(item.tag)}" />
       </label>
       <label>
-        狀態
-        <input type="text" data-field="status" data-id="${item.id}" value="${escapeHtml(item.status)}" required />
-      </label>
-      <label>
         說明
         <textarea rows="4" data-field="description" data-id="${item.id}" required>${escapeHtml(item.description)}</textarea>
+      </label>
+      <label>
+        內文
+        <textarea rows="10" data-field="content" data-id="${item.id}" required>${escapeHtml(item.content)}</textarea>
       </label>
     </article>
   `;
@@ -256,10 +252,9 @@ addPublicationButton.addEventListener("click", () => {
       {
         id: nextId,
         title: "新專刊標題",
-        issue: "新期數",
         tag: "",
         description: "請輸入專刊說明。",
-        status: "規劃中"
+        content: "請輸入完整刊物內容。"
       }
     ]
   };

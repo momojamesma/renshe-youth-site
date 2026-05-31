@@ -663,6 +663,49 @@ button {
   justify-content: flex-end;
 }
 
+.publication-link {
+  margin-top: 18px;
+}
+
+.publication-page {
+  width: min(860px, calc(100% - 32px));
+  margin: 0 auto 48px;
+  padding-top: 20px;
+}
+
+.publication-detail {
+  padding: 34px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 252, 247, 0.88);
+  box-shadow: var(--shadow-soft);
+}
+
+.publication-detail h1 {
+  margin: 16px 0 14px;
+  font-family: "Noto Serif TC", Georgia, serif;
+  font-size: clamp(2rem, 4.4vw, 3.25rem);
+  line-height: 1.2;
+}
+
+.publication-lead {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 1.06rem;
+  line-height: 1.9;
+}
+
+.publication-content {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.publication-content p {
+  margin: 0;
+  line-height: 1.95;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -903,7 +946,8 @@ textarea {
   .site-footer,
   .hero,
   .manifesto-strip,
-  .admin-shell {
+  .admin-shell,
+  .publication-page {
     width: min(100% - 24px, 1120px);
   }
 
@@ -926,7 +970,8 @@ textarea {
   .card-grid article,
   .site-footer,
   .manifesto-card,
-  .about-copy p {
+  .about-copy p,
+  .publication-detail {
     padding: 22px;
   }
 

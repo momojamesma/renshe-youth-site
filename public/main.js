@@ -83,15 +83,14 @@ function renderPublications(items) {
         <article class="publication-item">
           <header>
             <div>
-              <p class="panel-label">${item.issue}</p>
               <h3>${item.title}</h3>
             </div>
             <div class="publication-meta">
               ${item.tag ? `<span class="topic-pill">${item.tag}</span>` : ""}
-              <span class="status-pill">${item.status}</span>
             </div>
           </header>
           <p>${item.description}</p>
+          <a class="inline-link publication-link" href="/publication.html?id=${item.id}">閱讀完整刊物</a>
         </article>
       `
     )
