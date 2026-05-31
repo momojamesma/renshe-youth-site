@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { URL } = require("url");
+const { Pool } = require("pg");
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, "public");
@@ -13,6 +14,10 @@ const ADMINS_PATH = path.join(DATA_DIR, "admins.json");
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "renshe2026";
 const ADMIN_ROUTE = "/manage-console";
+const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const ALLOW_TEST_ADMIN =
+  process.env.ALLOW_TEST_ADMIN === "true" ||
+  (!IS_PRODUCTION && process.env.ALLOW_TEST_ADMIN !== "false");
 
 const sessions = new Map();
 
@@ -28,70 +33,222 @@ const MIME_TYPES = {
   ".ico": "image/x-icon"
 };
 
-function readSiteData() {
-  return JSON.parse(fs.readFileSync(SITE_DATA_PATH, "utf8"));
-}
-
-function writeSiteData(nextData) {
-  fs.writeFileSync(SITE_DATA_PATH, JSON.stringify(nextData, null, 2), "utf8");
-}
-
 function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
-function ensureAdminsFile() {
+function ensureDataDirectory() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
+}
 
-  let admins = [];
-  if (fs.existsSync(ADMINS_PATH)) {
-    admins = JSON.parse(fs.readFileSync(ADMINS_PATH, "utf8"));
+function readJsonFile(filePath) {
+  return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function writeJsonFile(filePath, payload) {
+  fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), "utf8");
+}
+
+function getSeedAdmins() {
+  const seedAdmins = [{ username: ADMIN_USER, password: ADMIN_PASSWORD }];
+  if (ALLOW_TEST_ADMIN) {
+    seedAdmins.push({ username: "test_admin", password: "youthhss2026" });
   }
+  return seedAdmins;
+}
 
-  const seedAdmins = [
-    { username: ADMIN_USER, password: ADMIN_PASSWORD },
-    { username: "test_admin", password: "youthhss2026" }
-  ];
+function normalizeAdminRecord(admin, fallbackCreatedAt = new Date().toISOString()) {
+  return {
+    username: admin.username,
+    passwordHash: admin.passwordHash,
+    createdAt: admin.createdAt || fallbackCreatedAt
+  };
+}
 
-  let changed = false;
-  for (const account of seedAdmins) {
-    const existingIndex = admins.findIndex((item) => item.username === account.username);
-    const nextRecord = {
+function buildSeededAdmins(existingAdmins) {
+  const adminMap = new Map(
+    existingAdmins.map((admin) => [admin.username, normalizeAdminRecord(admin)])
+  );
+
+  for (const account of getSeedAdmins()) {
+    const existing = adminMap.get(account.username);
+    adminMap.set(account.username, {
       username: account.username,
       passwordHash: hashPassword(account.password),
-      createdAt: new Date().toISOString()
-    };
+      createdAt: existing?.createdAt || new Date().toISOString()
+    });
+  }
 
-    if (existingIndex === -1) {
-      admins.push(nextRecord);
-      changed = true;
-      continue;
+  if (!ALLOW_TEST_ADMIN) {
+    adminMap.delete("test_admin");
+  }
+
+  return Array.from(adminMap.values()).sort((left, right) =>
+    left.username.localeCompare(right.username)
+  );
+}
+
+function createFileStore() {
+  return {
+    async init() {
+      ensureDataDirectory();
+
+      if (!fs.existsSync(SITE_DATA_PATH)) {
+        throw new Error(`Missing site data file: ${SITE_DATA_PATH}`);
+      }
+
+      const existingAdmins = fs.existsSync(ADMINS_PATH) ? readJsonFile(ADMINS_PATH) : [];
+      writeJsonFile(ADMINS_PATH, buildSeededAdmins(existingAdmins));
+    },
+
+    async readSiteData() {
+      return readJsonFile(SITE_DATA_PATH);
+    },
+
+    async writeSiteData(nextData) {
+      writeJsonFile(SITE_DATA_PATH, nextData);
+      return nextData;
+    },
+
+    async readAdmins() {
+      return readJsonFile(ADMINS_PATH);
+    },
+
+    async writeAdmins(admins) {
+      writeJsonFile(ADMINS_PATH, admins);
+      return admins;
+    }
+  };
+}
+
+function createPostgresStore(connectionString) {
+  const pool = new Pool({
+    connectionString,
+    ssl: connectionString.includes("render.com") ? { rejectUnauthorized: false } : false
+  });
+
+  async function seedSiteData() {
+    const existing = await pool.query(
+      "SELECT value FROM site_content WHERE key = 'site_data' LIMIT 1"
+    );
+    if (existing.rowCount > 0) {
+      return;
     }
 
-    if (admins[existingIndex].passwordHash !== nextRecord.passwordHash) {
-      admins[existingIndex] = {
-        ...admins[existingIndex],
-        passwordHash: nextRecord.passwordHash
-      };
-      changed = true;
+    const initialSiteData = readJsonFile(SITE_DATA_PATH);
+    await pool.query(
+      "INSERT INTO site_content (key, value) VALUES ('site_data', $1::jsonb)",
+      [JSON.stringify(initialSiteData)]
+    );
+  }
+
+  async function syncSeedAdmins() {
+    const result = await pool.query(
+      "SELECT username, password_hash AS \"passwordHash\", created_at AS \"createdAt\" FROM admin_accounts"
+    );
+    const seededAdmins = buildSeededAdmins(result.rows);
+
+    await pool.query("BEGIN");
+    try {
+      await pool.query("DELETE FROM admin_accounts");
+      for (const admin of seededAdmins) {
+        await pool.query(
+          `INSERT INTO admin_accounts (username, password_hash, created_at)
+           VALUES ($1, $2, $3)`,
+          [admin.username, admin.passwordHash, admin.createdAt]
+        );
+      }
+      await pool.query("COMMIT");
+    } catch (error) {
+      await pool.query("ROLLBACK");
+      throw error;
     }
   }
 
-  if (!fs.existsSync(ADMINS_PATH) || changed) {
-    fs.writeFileSync(ADMINS_PATH, JSON.stringify(admins, null, 2), "utf8");
-  }
+  return {
+    async init() {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS site_content (
+          key TEXT PRIMARY KEY,
+          value JSONB NOT NULL
+        )
+      `);
+
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS admin_accounts (
+          username TEXT PRIMARY KEY,
+          password_hash TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+
+      await seedSiteData();
+      await syncSeedAdmins();
+    },
+
+    async readSiteData() {
+      const result = await pool.query(
+        "SELECT value FROM site_content WHERE key = 'site_data' LIMIT 1"
+      );
+      if (result.rowCount === 0) {
+        throw new Error("Missing site_data record");
+      }
+      return result.rows[0].value;
+    },
+
+    async writeSiteData(nextData) {
+      await pool.query(
+        `INSERT INTO site_content (key, value)
+         VALUES ('site_data', $1::jsonb)
+         ON CONFLICT (key)
+         DO UPDATE SET value = EXCLUDED.value`,
+        [JSON.stringify(nextData)]
+      );
+      return nextData;
+    },
+
+    async readAdmins() {
+      const result = await pool.query(
+        `SELECT username, password_hash AS "passwordHash", created_at AS "createdAt"
+         FROM admin_accounts
+         ORDER BY username ASC`
+      );
+
+      return result.rows.map((admin) => ({
+        username: admin.username,
+        passwordHash: admin.passwordHash,
+        createdAt:
+          admin.createdAt instanceof Date ? admin.createdAt.toISOString() : admin.createdAt
+      }));
+    },
+
+    async writeAdmins(admins) {
+      await pool.query("BEGIN");
+      try {
+        await pool.query("DELETE FROM admin_accounts");
+        for (const admin of admins) {
+          await pool.query(
+            `INSERT INTO admin_accounts (username, password_hash, created_at)
+             VALUES ($1, $2, $3)`,
+            [admin.username, admin.passwordHash, admin.createdAt || new Date().toISOString()]
+          );
+        }
+        await pool.query("COMMIT");
+      } catch (error) {
+        await pool.query("ROLLBACK");
+        throw error;
+      }
+
+      return admins;
+    }
+  };
 }
 
-function readAdmins() {
-  ensureAdminsFile();
-  return JSON.parse(fs.readFileSync(ADMINS_PATH, "utf8"));
-}
-
-function writeAdmins(admins) {
-  fs.writeFileSync(ADMINS_PATH, JSON.stringify(admins, null, 2), "utf8");
-}
+const store = process.env.DATABASE_URL
+  ? createPostgresStore(process.env.DATABASE_URL)
+  : createFileStore();
 
 function sanitizeOrganizationInput(current, incoming) {
   if (!incoming || typeof incoming !== "object") {
@@ -118,7 +275,8 @@ function sanitizePublicationsInput(current, incoming) {
     title: typeof item.title === "string" ? item.title : "",
     issue: typeof item.issue === "string" ? item.issue : "",
     description: typeof item.description === "string" ? item.description : "",
-    status: typeof item.status === "string" ? item.status : ""
+    status: typeof item.status === "string" ? item.status : "",
+    tag: typeof item.tag === "string" ? item.tag : ""
   }));
 }
 
@@ -235,25 +393,30 @@ function servePrivateFile(filePath, res) {
 
 async function handleApi(req, res, pathname) {
   if (pathname === "/api/health" && req.method === "GET") {
-    sendJson(res, 200, { ok: true, status: "healthy" });
+    sendJson(res, 200, {
+      ok: true,
+      status: "healthy",
+      storage: process.env.DATABASE_URL ? "postgres" : "file"
+    });
     return true;
   }
 
   if (pathname === "/api/site-data" && req.method === "GET") {
-    sendJson(res, 200, readSiteData());
+    sendJson(res, 200, await store.readSiteData());
     return true;
   }
 
   if (pathname === "/api/login" && req.method === "POST") {
     try {
       const body = await parseBody(req);
-      const admins = readAdmins();
+      const admins = await store.readAdmins();
       const matched = admins.find(
         (item) =>
           item.username === body.username && item.passwordHash === hashPassword(body.password || "")
       );
+
       if (!matched) {
-        sendJson(res, 401, { error: "帳號或密碼錯誤" });
+        sendJson(res, 401, { error: "Invalid username or password." });
         return true;
       }
 
@@ -273,7 +436,7 @@ async function handleApi(req, res, pathname) {
       );
       return true;
     } catch (error) {
-      sendJson(res, 400, { error: "登入資料格式錯誤" });
+      sendJson(res, 400, { error: "Unable to process login request." });
       return true;
     }
   }
@@ -307,7 +470,7 @@ async function handleApi(req, res, pathname) {
       return true;
     }
 
-    const admins = readAdmins().map((item) => ({
+    const admins = (await store.readAdmins()).map((item) => ({
       username: item.username,
       createdAt: item.createdAt || null
     }));
@@ -326,13 +489,13 @@ async function handleApi(req, res, pathname) {
       const password = typeof body.password === "string" ? body.password : "";
 
       if (!username || !password) {
-        sendJson(res, 400, { error: "請輸入新管理員帳號與密碼" });
+        sendJson(res, 400, { error: "Username and password are required." });
         return true;
       }
 
-      const admins = readAdmins();
+      const admins = await store.readAdmins();
       if (admins.some((item) => item.username === username)) {
-        sendJson(res, 409, { error: "此管理員帳號已存在" });
+        sendJson(res, 409, { error: "That admin username already exists." });
         return true;
       }
 
@@ -341,17 +504,20 @@ async function handleApi(req, res, pathname) {
         passwordHash: hashPassword(password),
         createdAt: new Date().toISOString()
       });
-      writeAdmins(admins);
+
+      await store.writeAdmins(admins);
       sendJson(res, 201, {
         ok: true,
-        admins: admins.map((item) => ({
-          username: item.username,
-          createdAt: item.createdAt || null
-        }))
+        admins: admins
+          .map((item) => ({
+            username: item.username,
+            createdAt: item.createdAt || null
+          }))
+          .sort((left, right) => left.username.localeCompare(right.username))
       });
       return true;
     } catch (error) {
-      sendJson(res, 400, { error: "新增管理員失敗" });
+      sendJson(res, 400, { error: "Unable to create admin account." });
       return true;
     }
   }
@@ -363,7 +529,7 @@ async function handleApi(req, res, pathname) {
 
     try {
       const body = await parseBody(req);
-      const current = readSiteData();
+      const current = await store.readSiteData();
       const nextData = {
         ...current,
         organization: sanitizeOrganizationInput(current.organization, body.organization),
@@ -373,11 +539,12 @@ async function handleApi(req, res, pathname) {
         },
         publications: sanitizePublicationsInput(current.publications, body.publications)
       };
-      writeSiteData(nextData);
+
+      await store.writeSiteData(nextData);
       sendJson(res, 200, nextData);
       return true;
     } catch (error) {
-      sendJson(res, 400, { error: "更新資料失敗" });
+      sendJson(res, 400, { error: "Unable to update site data." });
       return true;
     }
   }
@@ -417,12 +584,19 @@ const server = http.createServer(async (req, res) => {
     const filePath = path.join(PUBLIC_DIR, normalizedPath);
     serveStaticFile(filePath, res);
   } catch (error) {
+    console.error(error);
     sendJson(res, 500, { error: "Server error" });
   }
 });
 
-ensureAdminsFile();
+async function start() {
+  await store.init();
+  server.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  });
+}
 
-server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+start().catch((error) => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
 });
