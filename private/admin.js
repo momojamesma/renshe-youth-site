@@ -14,7 +14,7 @@ const createAdminButton = document.getElementById("create-admin-button");
 let currentData = null;
 
 function escapeHtml(value) {
-  return String(value)
+  return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -30,7 +30,7 @@ function createPublicationFields(item, index) {
   return `
     <article class="publication-editor-item">
       <div class="editor-item-header">
-        <h3>刊物 ${index + 1}</h3>
+        <h3>專刊 ${index + 1}</h3>
         <button class="button secondary delete-publication-button" type="button" data-remove-id="${item.id}">刪除</button>
       </div>
       <label>
@@ -40,6 +40,10 @@ function createPublicationFields(item, index) {
       <label>
         期數
         <input type="text" data-field="issue" data-id="${item.id}" value="${escapeHtml(item.issue)}" required />
+      </label>
+      <label>
+        標籤
+        <input type="text" data-field="tag" data-id="${item.id}" value="${escapeHtml(item.tag)}" />
       </label>
       <label>
         狀態
@@ -59,15 +63,35 @@ function renderAdminAccounts(admins) {
       (item) => `
         <article class="publication-editor-item">
           <h3>${escapeHtml(item.username)}</h3>
-          <p class="caption">建立時間：${item.createdAt ? new Date(item.createdAt).toLocaleString("zh-TW") : "未提供"}</p>
+          <p class="caption">建立時間：${
+            item.createdAt ? new Date(item.createdAt).toLocaleString("zh-TW") : "未提供"
+          }</p>
         </article>
       `
     )
     .join("");
 }
 
+function getSafeDonation(data) {
+  return {
+    showTarget: data?.donation?.showTarget !== false,
+    target: data?.donation?.target ?? 0,
+    raised: data?.donation?.raised ?? 0,
+    title: data?.donation?.title ?? "",
+    summary: data?.donation?.summary ?? "",
+    bankTransfer: {
+      bankName: data?.donation?.bankTransfer?.bankName ?? "",
+      accountName: data?.donation?.bankTransfer?.accountName ?? "",
+      accountNumber: data?.donation?.bankTransfer?.accountNumber ?? "",
+      note: data?.donation?.bankTransfer?.note ?? ""
+    }
+  };
+}
+
 function fillForm(data) {
   currentData = data;
+  const donation = getSafeDonation(data);
+
   document.getElementById("organization-name-input").value = data.organization.name;
   document.getElementById("organization-tagline-input").value = data.organization.tagline;
   document.getElementById("organization-mission-input").value = data.organization.mission;
@@ -77,10 +101,18 @@ function fillForm(data) {
   document.getElementById("highlight-1").value = data.organization.highlights[0] || "";
   document.getElementById("highlight-2").value = data.organization.highlights[1] || "";
   document.getElementById("highlight-3").value = data.organization.highlights[2] || "";
-  document.getElementById("donation-title-input").value = data.donation.title;
-  document.getElementById("donation-raised-input").value = data.donation.raised;
-  document.getElementById("donation-target-input").value = data.donation.target;
-  document.getElementById("donation-summary-input").value = data.donation.summary;
+
+  document.getElementById("donation-title-input").value = donation.title;
+  document.getElementById("donation-raised-input").value = donation.raised;
+  document.getElementById("donation-target-input").value = donation.target;
+  document.getElementById("donation-show-target-input").checked = donation.showTarget;
+  document.getElementById("donation-summary-input").value = donation.summary;
+  document.getElementById("transfer-bank-name-input").value = donation.bankTransfer.bankName;
+  document.getElementById("transfer-account-name-input").value = donation.bankTransfer.accountName;
+  document.getElementById("transfer-account-number-input").value =
+    donation.bankTransfer.accountNumber;
+  document.getElementById("transfer-note-input").value = donation.bankTransfer.note;
+
   publicationEditor.innerHTML = data.publications.map(createPublicationFields).join("");
 }
 
@@ -109,6 +141,24 @@ function collectOrganization() {
       document.getElementById("highlight-2").value.trim(),
       document.getElementById("highlight-3").value.trim()
     ]
+  };
+}
+
+function collectDonation() {
+  const showTarget = document.getElementById("donation-show-target-input").checked;
+
+  return {
+    title: document.getElementById("donation-title-input").value.trim(),
+    raised: Number(document.getElementById("donation-raised-input").value),
+    target: Number(document.getElementById("donation-target-input").value || 0),
+    showTarget,
+    summary: document.getElementById("donation-summary-input").value.trim(),
+    bankTransfer: {
+      bankName: document.getElementById("transfer-bank-name-input").value.trim(),
+      accountName: document.getElementById("transfer-account-name-input").value.trim(),
+      accountNumber: document.getElementById("transfer-account-number-input").value.trim(),
+      note: document.getElementById("transfer-note-input").value.trim()
+    }
   };
 }
 
@@ -169,12 +219,7 @@ dashboardForm.addEventListener("submit", async (event) => {
 
   const payload = {
     organization: collectOrganization(),
-    donation: {
-      title: document.getElementById("donation-title-input").value.trim(),
-      raised: Number(document.getElementById("donation-raised-input").value),
-      target: Number(document.getElementById("donation-target-input").value),
-      summary: document.getElementById("donation-summary-input").value.trim()
-    },
+    donation: collectDonation(),
     publications: collectPublications()
   };
 
@@ -193,7 +238,7 @@ dashboardForm.addEventListener("submit", async (event) => {
   }
 
   fillForm(result);
-  saveMessage.textContent = "已更新網站資料。";
+  saveMessage.textContent = "內容已更新。";
 });
 
 addPublicationButton.addEventListener("click", () => {
@@ -201,20 +246,24 @@ addPublicationButton.addEventListener("click", () => {
     return;
   }
 
-  const nextId = currentData.publications.reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
+  const nextId =
+    currentData.publications.reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
+
   currentData = {
     ...currentData,
     publications: [
       ...currentData.publications,
       {
         id: nextId,
-        title: "新刊物標題",
-        issue: "新增期數",
-        description: "請輸入刊物說明。",
-        status: "草稿"
+        title: "新專刊標題",
+        issue: "新期數",
+        tag: "",
+        description: "請輸入專刊說明。",
+        status: "規劃中"
       }
     ]
   };
+
   publicationEditor.innerHTML = currentData.publications.map(createPublicationFields).join("");
 });
 
@@ -254,7 +303,7 @@ createAdminButton.addEventListener("click", async () => {
   renderAdminAccounts(result.admins);
   document.getElementById("new-admin-username").value = "";
   document.getElementById("new-admin-password").value = "";
-  adminMessage.textContent = "已新增管理員。";
+  adminMessage.textContent = "管理員已新增。";
 });
 
 logoutButton.addEventListener("click", async () => {

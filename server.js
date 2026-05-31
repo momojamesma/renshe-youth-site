@@ -3,7 +3,6 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const { URL } = require("url");
-const { Pool } = require("pg");
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = path.join(__dirname, "public");
@@ -124,6 +123,7 @@ function createFileStore() {
 }
 
 function createPostgresStore(connectionString) {
+  const { Pool } = require("pg");
   const pool = new Pool({
     connectionString,
     ssl: connectionString.includes("render.com") ? { rejectUnauthorized: false } : false

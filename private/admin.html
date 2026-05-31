@@ -11,7 +11,7 @@
       <section id="login-view" class="admin-card narrow">
         <p class="eyebrow">Admin Login</p>
         <h1>後台登入</h1>
-        <p class="caption">此頁面不會在前台顯示。登入後可管理募款、專刊與管理員帳號。</p>
+        <p class="caption">請使用管理員帳號登入，編輯募款資訊、專刊內容與網站資料。</p>
         <form id="login-form" class="stack-form">
           <label>
             帳號
@@ -37,8 +37,8 @@
 
         <form id="dashboard-form" class="stack-form">
           <div class="section-heading compact">
-            <h2>組織內容</h2>
-            <p class="caption">可編輯網站主標、使命與關於我們段落。</p>
+            <h2>組織資料</h2>
+            <p class="caption">調整首頁主標、使命敘述與關於我們內容。</p>
           </div>
 
           <div class="admin-grid">
@@ -47,7 +47,7 @@
               <input id="organization-name-input" type="text" required />
             </label>
             <label>
-              首頁主標
+              首頁標語
               <input id="organization-tagline-input" type="text" required />
             </label>
             <label>
@@ -62,8 +62,8 @@
           </label>
 
           <div class="section-heading compact">
-            <h2>關於我們段落</h2>
-            <p class="caption">建議保留三段，前台會依序顯示。</p>
+            <h2>關於我們</h2>
+            <p class="caption">這三段會顯示在前台的關於我們區塊。</p>
           </div>
 
           <div class="about-editor">
@@ -82,8 +82,8 @@
           </div>
 
           <div class="section-heading compact">
-            <h2>重點方向</h2>
-            <p class="caption">首頁卡片區塊會顯示這三條重點。</p>
+            <h2>首頁重點</h2>
+            <p class="caption">這三則會顯示在首頁重點卡片。</p>
           </div>
 
           <div class="about-editor">
@@ -101,20 +101,30 @@
             </label>
           </div>
 
+          <div class="section-heading compact">
+            <h2>募款設定</h2>
+            <p class="caption">可以調整募得金額、是否顯示目標，以及前台匯款資訊。</p>
+          </div>
+
           <div class="admin-grid">
             <label>
               募款標題
               <input id="donation-title-input" type="text" required />
             </label>
             <label>
-              目前募款金額
+              目前募得金額
               <input id="donation-raised-input" type="number" min="0" required />
             </label>
             <label>
-              募款目標
-              <input id="donation-target-input" type="number" min="0" required />
+              目標金額
+              <input id="donation-target-input" type="number" min="0" />
             </label>
           </div>
+
+          <label class="checkbox-field">
+            <input id="donation-show-target-input" type="checkbox" />
+            <span>前台顯示目標金額</span>
+          </label>
 
           <label>
             募款說明
@@ -122,18 +132,43 @@
           </label>
 
           <div class="section-heading compact">
-            <h2>刊物資料</h2>
-            <p class="caption">可直接調整標題、期數、說明與狀態，也可新增或刪除。</p>
+            <h2>匯款資訊</h2>
+            <p class="caption">這些欄位會顯示在前台募款頁的匯款資訊卡。</p>
+          </div>
+
+          <div class="admin-grid">
+            <label>
+              銀行名稱
+              <input id="transfer-bank-name-input" type="text" />
+            </label>
+            <label>
+              戶名
+              <input id="transfer-account-name-input" type="text" />
+            </label>
+            <label>
+              匯款帳號
+              <input id="transfer-account-number-input" type="text" />
+            </label>
+          </div>
+
+          <label>
+            匯款說明
+            <textarea id="transfer-note-input" rows="3"></textarea>
+          </label>
+
+          <div class="section-heading compact">
+            <h2>專刊資料</h2>
+            <p class="caption">可新增、刪除與修改專刊內容。</p>
           </div>
 
           <div class="editor-toolbar">
-            <button id="add-publication-button" class="button secondary" type="button">新增刊物</button>
+            <button id="add-publication-button" class="button secondary" type="button">新增專刊</button>
           </div>
           <div id="publication-editor" class="publication-editor"></div>
 
           <div class="section-heading compact">
             <h2>管理員帳號</h2>
-            <p class="caption">可新增後台管理員。帳號建立後可立即登入。</p>
+            <p class="caption">建立新的管理員帳號，讓不同成員分別登入後台。</p>
           </div>
 
           <div id="admin-account-list" class="admin-account-list"></div>
@@ -148,13 +183,13 @@
               <input id="new-admin-password" type="password" />
             </label>
             <div class="button-column">
-              <span class="caption">建立後即可用於登入後台。</span>
+              <span class="caption">建立後可立即使用新帳號登入。</span>
               <button id="create-admin-button" class="button secondary" type="button">新增管理員</button>
             </div>
           </div>
 
           <p id="admin-message" class="message"></p>
-          <button class="button primary" type="submit">儲存更新</button>
+          <button class="button primary" type="submit">儲存變更</button>
           <p id="save-message" class="message"></p>
         </form>
       </section>

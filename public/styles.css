@@ -555,6 +555,46 @@ button {
   margin: 8px 0 0;
 }
 
+.bank-transfer-card {
+  margin-top: 10px;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 252, 246, 0.76);
+  box-shadow: var(--shadow-soft);
+}
+
+.bank-transfer-card h3 {
+  margin: 8px 0 16px;
+  font-family: "Noto Serif TC", Georgia, serif;
+  font-size: 1.3rem;
+}
+
+.transfer-grid {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.transfer-grid div {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(47, 58, 64, 0.08);
+}
+
+.transfer-grid dt {
+  margin: 0 0 6px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.transfer-grid dd {
+  margin: 0;
+  font-weight: 700;
+  word-break: break-word;
+}
+
 .bullet-list li::marker {
   color: var(--accent);
 }
@@ -738,6 +778,17 @@ button {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+}
+
+.checkbox-field {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-field input {
+  width: auto;
+  margin: 0;
 }
 
 input,
