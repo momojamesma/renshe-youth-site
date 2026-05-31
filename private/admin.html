@@ -11,7 +11,7 @@
       <section id="login-view" class="admin-card narrow">
         <p class="eyebrow">Admin Login</p>
         <h1>後台登入</h1>
-        <p class="caption">請使用管理員帳號與密碼登入，登入後即可管理募款資訊、刊物內容與管理員帳號。</p>
+        <p class="caption">請使用管理員帳號與密碼登入，登入後即可管理網站內容、顏色與頭像設定。</p>
         <form id="login-form" class="stack-form">
           <label>
             帳號
@@ -38,7 +38,7 @@
         <form id="dashboard-form" class="stack-form">
           <div class="section-heading compact">
             <h2>組織資訊</h2>
-            <p class="caption">更新網站首頁會出現的組織名稱、標語與核心介紹。</p>
+            <p class="caption">更新首頁名稱、標語、使命與品牌頭像。</p>
           </div>
 
           <div class="admin-grid">
@@ -60,6 +60,56 @@
             使命說明
             <textarea id="organization-mission-input" rows="4" required></textarea>
           </label>
+
+          <div class="admin-grid">
+            <label>
+              頭像網址
+              <input id="avatar-url-input" type="url" placeholder="https://example.com/avatar.jpg" />
+            </label>
+            <label>
+              頭像文字
+              <input id="brand-mark-text-input" type="text" maxlength="4" placeholder="RY" />
+            </label>
+            <div class="button-column">
+              <span class="caption">若未填頭像網址，前台會顯示頭像文字。</span>
+            </div>
+          </div>
+
+          <div class="section-heading compact">
+            <h2>區塊顏色</h2>
+            <p class="caption">可分別調整前台各區塊背景色，建議使用較柔和的色彩以維持可讀性。</p>
+          </div>
+
+          <div class="admin-grid">
+            <label>
+              Header
+              <input id="color-header-input" type="color" />
+            </label>
+            <label>
+              Hero
+              <input id="color-hero-input" type="color" />
+            </label>
+            <label>
+              重點議題
+              <input id="color-highlights-input" type="color" />
+            </label>
+            <label>
+              募款
+              <input id="color-donate-input" type="color" />
+            </label>
+            <label>
+              刊物
+              <input id="color-publications-input" type="color" />
+            </label>
+            <label>
+              關於我們
+              <input id="color-about-input" type="color" />
+            </label>
+            <label>
+              Footer
+              <input id="color-footer-input" type="color" />
+            </label>
+          </div>
 
           <div class="section-heading compact">
             <h2>關於我們</h2>

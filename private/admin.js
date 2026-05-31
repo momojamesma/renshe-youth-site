@@ -11,6 +11,16 @@ const adminAccountList = document.getElementById("admin-account-list");
 const adminMessage = document.getElementById("admin-message");
 const createAdminButton = document.getElementById("create-admin-button");
 
+const DEFAULT_SECTION_COLORS = {
+  header: "#f5f1e8",
+  hero: "#f2eadf",
+  highlights: "#f7f1e8",
+  donate: "#f1e7d8",
+  publications: "#f8f3ec",
+  about: "#efe5d8",
+  footer: "#23423a"
+};
+
 let currentData = null;
 let currentAdminUsername = "";
 
@@ -103,6 +113,16 @@ function renderAdminAccounts(admins) {
     .join("");
 }
 
+function getSafeAppearance(organization) {
+  return {
+    brandMarkText: organization?.appearance?.brandMarkText ?? "RY",
+    sectionColors: {
+      ...DEFAULT_SECTION_COLORS,
+      ...(organization?.appearance?.sectionColors || {})
+    }
+  };
+}
+
 function getSafeDonation(data) {
   return {
     showTarget: data?.donation?.showTarget !== false,
@@ -122,10 +142,20 @@ function getSafeDonation(data) {
 function fillForm(data) {
   currentData = data;
   const donation = getSafeDonation(data);
+  const appearance = getSafeAppearance(data.organization);
 
   document.getElementById("organization-name-input").value = data.organization?.name ?? "";
   document.getElementById("organization-tagline-input").value = data.organization?.tagline ?? "";
   document.getElementById("organization-mission-input").value = data.organization?.mission ?? "";
+  document.getElementById("avatar-url-input").value = data.organization?.avatarUrl ?? "";
+  document.getElementById("brand-mark-text-input").value = appearance.brandMarkText;
+  document.getElementById("color-header-input").value = appearance.sectionColors.header;
+  document.getElementById("color-hero-input").value = appearance.sectionColors.hero;
+  document.getElementById("color-highlights-input").value = appearance.sectionColors.highlights;
+  document.getElementById("color-donate-input").value = appearance.sectionColors.donate;
+  document.getElementById("color-publications-input").value = appearance.sectionColors.publications;
+  document.getElementById("color-about-input").value = appearance.sectionColors.about;
+  document.getElementById("color-footer-input").value = appearance.sectionColors.footer;
   document.getElementById("about-paragraph-1").value = data.organization?.about?.[0] ?? "";
   document.getElementById("about-paragraph-2").value = data.organization?.about?.[1] ?? "";
   document.getElementById("about-paragraph-3").value = data.organization?.about?.[2] ?? "";
@@ -162,6 +192,20 @@ function collectOrganization() {
     name: document.getElementById("organization-name-input").value.trim(),
     tagline: document.getElementById("organization-tagline-input").value.trim(),
     mission: document.getElementById("organization-mission-input").value.trim(),
+    avatarUrl: document.getElementById("avatar-url-input").value.trim(),
+    appearance: {
+      ...(currentData.organization?.appearance || {}),
+      brandMarkText: document.getElementById("brand-mark-text-input").value.trim() || "RY",
+      sectionColors: {
+        header: document.getElementById("color-header-input").value,
+        hero: document.getElementById("color-hero-input").value,
+        highlights: document.getElementById("color-highlights-input").value,
+        donate: document.getElementById("color-donate-input").value,
+        publications: document.getElementById("color-publications-input").value,
+        about: document.getElementById("color-about-input").value,
+        footer: document.getElementById("color-footer-input").value
+      }
+    },
     about: [
       document.getElementById("about-paragraph-1").value.trim(),
       document.getElementById("about-paragraph-2").value.trim(),

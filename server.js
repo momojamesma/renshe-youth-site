@@ -270,13 +270,31 @@ function sanitizeOrganizationInput(current, incoming) {
     return current;
   }
 
+  const nextAppearance =
+    incoming.appearance && typeof incoming.appearance === "object"
+      ? {
+          ...(current.appearance || {}),
+          ...incoming.appearance,
+          sectionColors:
+            incoming.appearance.sectionColors &&
+            typeof incoming.appearance.sectionColors === "object"
+              ? {
+                  ...(current.appearance?.sectionColors || {}),
+                  ...incoming.appearance.sectionColors
+                }
+              : current.appearance?.sectionColors
+        }
+      : current.appearance;
+
   return {
     ...current,
     name: typeof incoming.name === "string" ? incoming.name : current.name,
     tagline: typeof incoming.tagline === "string" ? incoming.tagline : current.tagline,
     mission: typeof incoming.mission === "string" ? incoming.mission : current.mission,
+    avatarUrl: typeof incoming.avatarUrl === "string" ? incoming.avatarUrl : current.avatarUrl,
     about: Array.isArray(incoming.about) ? incoming.about : current.about,
-    highlights: Array.isArray(incoming.highlights) ? incoming.highlights : current.highlights
+    highlights: Array.isArray(incoming.highlights) ? incoming.highlights : current.highlights,
+    appearance: nextAppearance
   };
 }
 
