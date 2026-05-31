@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>人社青年</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&family=Noto+Serif+TC:wght@600;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="front-page">
+    <header class="site-header">
+      <div class="brand-lockup">
+        <span class="brand-mark">RY</span>
+        <div>
+          <p class="eyebrow">Public Participation Collective</p>
+          <h1>人社青年</h1>
+        </div>
+      </div>
+      <nav class="desktop-nav" aria-label="主選單">
+        <a href="#home">首頁</a>
+        <div class="dropdown">
+          <button class="dropdown-toggle" aria-expanded="false">認識我們</button>
+          <div class="dropdown-menu">
+            <a href="#about">關於我們</a>
+            <a href="#highlights">行動重點</a>
+            <a href="#contact">加入行列</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="dropdown-toggle" aria-expanded="false">支持行動</button>
+          <div class="dropdown-menu">
+            <a href="#donate">募款</a>
+            <a href="#publications">專刊</a>
+          </div>
+        </div>
+      </nav>
+      <button class="mobile-menu-toggle" aria-expanded="false" aria-controls="mobile-menu">
+        選單
+      </button>
+    </header>
+
+    <nav id="mobile-menu" class="mobile-nav" aria-label="行動版主選單">
+      <a href="#home">首頁</a>
+      <a href="#about">關於我們</a>
+      <a href="#donate">募款</a>
+      <a href="#publications">專刊</a>
+    </nav>
+
+    <main id="home">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="hero-kicker">
+            <p class="eyebrow">人文社會 × 青年視角 × 公共參與</p>
+            <span class="hero-badge">議題轉譯媒體</span>
+          </div>
+          <h2 id="hero-title">用學生的眼光看人社，用人社的視角看社會</h2>
+          <p id="hero-mission"></p>
+          <div id="theme-list" class="theme-list"></div>
+          <div class="hero-actions">
+            <a class="button primary" href="#donate">支持募款</a>
+            <a class="button secondary" href="#publications">閱讀專刊</a>
+          </div>
+          <div id="hero-stats" class="hero-stats" aria-label="網站重點資訊"></div>
+        </div>
+        <aside class="hero-panel">
+          <p class="panel-label">帳號焦點</p>
+          <h3>把抽象的人文社會理論，翻成青年能理解的公共語言</h3>
+          <p>
+            從社會建構、特權、自由、霸權到轉型正義，人社青年持續把議題拆解成可以閱讀、討論與參與的內容。
+          </p>
+          <div class="hero-panel-divider"></div>
+          <div class="hero-metrics">
+            <article>
+              <strong id="ig-followers">1,486</strong>
+              <span>followers</span>
+            </article>
+            <article>
+              <strong id="ig-posts">93</strong>
+              <span>posts</span>
+            </article>
+            <article>
+              <strong id="ig-following">58</strong>
+              <span>following</span>
+            </article>
+          </div>
+          <a id="ig-link" class="inline-link" href="https://www.instagram.com/youth.hss/" target="_blank" rel="noreferrer">前往 Instagram</a>
+        </aside>
+      </section>
+
+      <section class="manifesto-strip">
+        <div class="manifesto-card">
+          <p class="panel-label">Manifesto</p>
+          <p>不是把議題講得更大聲，而是把脈絡講得更清楚。</p>
+        </div>
+        <div class="manifesto-card">
+          <p class="panel-label">Method</p>
+          <p>從學生視角出發，把理論、新聞與公共生活重新接上。</p>
+        </div>
+        <div class="manifesto-card">
+          <p class="panel-label">Audience</p>
+          <p>給剛開始接觸公共議題，也想更扎實理解社會的人。</p>
+        </div>
+      </section>
+
+      <section id="highlights" class="section">
+        <div class="section-heading">
+          <p class="eyebrow">Why We Organize</p>
+          <h2>我們如何把關注變成行動</h2>
+          <p class="section-intro">從議題理解到內容產製，再到公共參與的擴散，讓青年不只接收觀點，也能形成自己的判斷。</p>
+        </div>
+        <div id="highlight-list" class="card-grid"></div>
+      </section>
+
+      <section id="donate" class="section split-section">
+        <div class="section-copy">
+          <p class="eyebrow">Donate</p>
+          <h2 id="donation-title"></h2>
+          <p id="donation-summary"></p>
+          <ul id="donation-accounts" class="bullet-list"></ul>
+        </div>
+        <div class="donation-card">
+          <p class="panel-label">募款進度</p>
+          <div class="amount-row">
+            <strong id="raised-amount">NT$0</strong>
+            <span id="target-amount">/ NT$0</span>
+          </div>
+          <div class="progress-track">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+          <p id="progress-caption" class="progress-caption"></p>
+          <p class="caption">募款數字與專刊資訊由管理端維護，前台會同步顯示最新內容。</p>
+        </div>
+      </section>
+
+      <section id="publications" class="section">
+        <div class="section-heading">
+          <p class="eyebrow">Publications</p>
+          <h2>專刊與議題整理</h2>
+          <p class="section-intro">把貼文延伸成可以慢慢讀、反覆想、拿去討論的長內容。</p>
+        </div>
+        <div id="publication-list" class="publication-list"></div>
+      </section>
+
+      <section id="about" class="section about-section">
+        <div class="section-heading">
+          <p class="eyebrow">About Us</p>
+          <h2>關於我們</h2>
+          <p class="section-intro">人社青年不是評論現象而已，而是努力建立一種更細緻的觀看方法。</p>
+        </div>
+        <div id="about-list" class="about-copy"></div>
+      </section>
+    </main>
+
+    <footer id="contact" class="site-footer">
+      <div class="footer-copy">
+        <p class="eyebrow">Join Us</p>
+        <h2>讓看懂社會的人再多一些</h2>
+        <p>你可以捐款、分享專刊，或直接追蹤 <a href="https://www.instagram.com/youth.hss/" target="_blank" rel="noreferrer">@youth.hss</a>，陪人社青年把人文社會科普帶進更多人的日常。</p>
+      </div>
+      <div class="footer-meta">
+        <nav class="footer-nav" aria-label="頁尾導覽">
+          <a href="#highlights">行動重點</a>
+          <a href="#publications">專刊</a>
+          <a href="#about">關於我們</a>
+        </nav>
+        <a class="button primary" href="#donate">支持我們</a>
+      </div>
+    </footer>
+
+    <script src="/main.js"></script>
+  </body>
+</html>

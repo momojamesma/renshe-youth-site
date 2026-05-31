@@ -1,0 +1,9 @@
+{
+  "name": "renshe-youth-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Public participation youth organization website with admin dashboard.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

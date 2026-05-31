@@ -1,0 +1,12 @@
+[
+  {
+    "username": "admin",
+    "passwordHash": "02632e9d019f7fbefb2ea7a798dc8a00871983462573bdc9b600559d63c7f8e3",
+    "createdAt": "2026-05-31T00:00:00.000Z"
+  },
+  {
+    "username": "test_admin",
+    "passwordHash": "1bc6efd64cb5963b920f8db2de3167a836ceac329761527f6466e79afb29dfca",
+    "createdAt": "2026-05-31T00:00:00.000Z"
+  }
+]
