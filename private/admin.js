@@ -12,8 +12,18 @@ const adminMessage = document.getElementById("admin-message");
 const createAdminButton = document.getElementById("create-admin-button");
 
 let currentData = null;
+let currentAdminUsername = "";
+const PROTECTED_ADMIN_USERNAME = "renshe_admin";
 
 const ADMIN_USERNAME_RULE = /^[A-Za-z0-9._]{1,30}$/;
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
 
 function validateAdminCredentials(username, password) {
   if (!ADMIN_USERNAME_RULE.test(username)) {
@@ -25,14 +35,6 @@ function validateAdminCredentials(username, password) {
   }
 
   return "";
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
 }
 
 function showDashboard(show) {
@@ -72,10 +74,26 @@ function renderAdminAccounts(admins) {
     .map(
       (item) => `
         <article class="publication-editor-item">
-          <h3>${escapeHtml(item.username)}</h3>
-          <p class="caption">建立時間：${
-            item.createdAt ? new Date(item.createdAt).toLocaleString("zh-TW") : "未提供"
-          }</p>
+          <div class="editor-item-header">
+            <div>
+              <h3>${escapeHtml(item.username)}</h3>
+              <p class="caption">建立時間：${
+                item.createdAt ? new Date(item.createdAt).toLocaleString("zh-TW") : "未提供"
+              }</p>
+            </div>
+            <button
+              class="button secondary delete-admin-button"
+              type="button"
+              data-username="${escapeHtml(item.username)}"
+              ${
+                item.username === currentAdminUsername || item.username === PROTECTED_ADMIN_USERNAME
+                  ? "disabled"
+                  : ""
+              }
+            >
+              刪除管理員
+            </button>
+          </div>
         </article>
       `
     )
@@ -217,6 +235,7 @@ loginForm.addEventListener("submit", async (event) => {
     return;
   }
 
+  currentAdminUsername = result.username;
   const [siteData, accounts] = await Promise.all([fetchSiteData(), fetchAdminAccounts()]);
   fillForm(siteData);
   renderAdminAccounts(accounts.admins);
@@ -321,15 +340,49 @@ createAdminButton.addEventListener("click", async () => {
   adminMessage.textContent = "管理員已新增。";
 });
 
+adminAccountList.addEventListener("click", async (event) => {
+  const button = event.target.closest(".delete-admin-button");
+  if (!button) {
+    return;
+  }
+
+  const username = button.dataset.username;
+  if (!username) {
+    return;
+  }
+
+  const confirmed = window.confirm(`確定要刪除管理員 ${username} 嗎？`);
+  if (!confirmed) {
+    return;
+  }
+
+  adminMessage.textContent = "";
+
+  const response = await fetch(`/api/admin/accounts/${encodeURIComponent(username)}`, {
+    method: "DELETE"
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    adminMessage.textContent = result.error || "刪除管理員失敗";
+    return;
+  }
+
+  renderAdminAccounts(result.admins);
+  adminMessage.textContent = "管理員已刪除。";
+});
+
 logoutButton.addEventListener("click", async () => {
   await fetch("/api/logout", { method: "POST" });
   loginForm.reset();
+  currentAdminUsername = "";
   showDashboard(false);
 });
 
 (async function init() {
   try {
-    await fetchAdminSession();
+    const session = await fetchAdminSession();
+    currentAdminUsername = session.username;
     const [siteData, accounts] = await Promise.all([fetchSiteData(), fetchAdminAccounts()]);
     fillForm(siteData);
     renderAdminAccounts(accounts.admins);

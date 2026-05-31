@@ -13,6 +13,7 @@ const ADMINS_PATH = path.join(DATA_DIR, "admins.json");
 const ADMIN_USER = process.env.ADMIN_USER || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "renshe2026";
 const ADMIN_ROUTE = "/manage-console";
+const PROTECTED_ADMIN_USERNAME = ADMIN_USER;
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const ALLOW_TEST_ADMIN =
   process.env.ALLOW_TEST_ADMIN === "true" ||
@@ -539,6 +540,54 @@ async function handleApi(req, res, pathname) {
       sendJson(res, 400, { error: "Unable to create admin account." });
       return true;
     }
+  }
+
+  if (pathname.startsWith("/api/admin/accounts/") && req.method === "DELETE") {
+    const session = requireAuth(req, res);
+    if (!session) {
+      return true;
+    }
+
+    const username = decodeURIComponent(pathname.replace("/api/admin/accounts/", "")).trim();
+    if (!username) {
+      sendJson(res, 400, { error: "Username is required." });
+      return true;
+    }
+
+    if (username === session.username) {
+      sendJson(res, 400, { error: "You cannot delete the account you are currently using." });
+      return true;
+    }
+
+    if (username === PROTECTED_ADMIN_USERNAME) {
+      sendJson(res, 400, { error: "The primary admin account cannot be deleted." });
+      return true;
+    }
+
+    const admins = await store.readAdmins();
+    const nextAdmins = admins.filter((item) => item.username !== username);
+
+    if (nextAdmins.length === admins.length) {
+      sendJson(res, 404, { error: "Admin account not found." });
+      return true;
+    }
+
+    if (nextAdmins.length === 0) {
+      sendJson(res, 400, { error: "At least one admin account must remain." });
+      return true;
+    }
+
+    await store.writeAdmins(nextAdmins);
+    sendJson(res, 200, {
+      ok: true,
+      admins: nextAdmins
+        .map((item) => ({
+          username: item.username,
+          createdAt: item.createdAt || null
+        }))
+        .sort((left, right) => left.username.localeCompare(right.username))
+    });
+    return true;
   }
 
   if (pathname === "/api/admin/site-data" && req.method === "PUT") {
