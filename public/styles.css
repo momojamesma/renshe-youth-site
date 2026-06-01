@@ -10,8 +10,8 @@
   --muted: #67766f;
   --accent: #c77855;
   --accent-deep: #9b593d;
-  --forest: #46635b;
-  --ink: #355049;
+  --forest: #6a847a;
+  --ink: #516961;
   --gold: #c8a46f;
   --shadow-soft: 0 20px 60px rgba(36, 53, 48, 0.08);
   --shadow-card: 0 18px 44px rgba(36, 53, 48, 0.12);
@@ -134,7 +134,7 @@ button {
 }
 
 .theme-donate {
-  --section-bg: linear-gradient(135deg, rgba(236, 242, 237, 0.96), rgba(244, 239, 229, 0.96));
+  --section-bg: linear-gradient(135deg, rgba(240, 244, 239, 0.97), rgba(246, 241, 233, 0.96));
   --section-text: var(--text);
 }
 
@@ -149,7 +149,7 @@ button {
 }
 
 .theme-footer {
-  --section-bg: #3f5b54;
+  --section-bg: #738b83;
   --section-text: #fffaf3;
 }
 
@@ -214,7 +214,7 @@ button {
   display: grid;
   place-items: center;
   border-radius: 18px;
-  background: linear-gradient(145deg, var(--forest), #6f8d84);
+  background: linear-gradient(145deg, #6f897f, #8ea59d);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
   color: #fff;
   font-weight: 800;
@@ -355,7 +355,7 @@ button {
 .footer-nav a:hover,
 .button:hover,
 .inline-link:hover {
-  background: rgba(70, 99, 91, 0.1);
+  background: rgba(106, 132, 122, 0.12);
 }
 
 .dropdown:hover .dropdown-menu,
@@ -423,7 +423,7 @@ button {
   min-height: 36px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(35, 66, 58, 0.08);
+  background: rgba(111, 137, 127, 0.12);
   color: var(--forest);
   font-size: 0.9rem;
   font-weight: 700;
@@ -564,7 +564,7 @@ button {
 
 .hero-panel {
   background:
-    linear-gradient(180deg, rgba(34, 66, 58, 0.95), rgba(46, 83, 73, 0.92)),
+    linear-gradient(180deg, rgba(115, 139, 131, 0.95), rgba(132, 156, 147, 0.93)),
     var(--forest);
   color: #fff;
   box-shadow: var(--shadow-card);
@@ -586,7 +586,7 @@ button {
   width: 100%;
   height: 1px;
   margin: 22px 0 18px;
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .hero-metrics {
@@ -598,8 +598,8 @@ button {
 .hero-metrics article {
   padding: 16px 14px;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .inline-link {
@@ -785,7 +785,7 @@ button {
   height: 100%;
   width: 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--forest), var(--gold));
+  background: linear-gradient(90deg, #7c958b, #d3b07c);
 }
 
 .progress-caption {
@@ -838,13 +838,13 @@ button {
   min-height: 40px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(35, 66, 58, 0.08);
+  background: rgba(111, 137, 127, 0.12);
   color: var(--forest);
 }
 
 .publication-item .inline-link:hover {
-  background: rgba(70, 99, 91, 0.14);
-  color: #29423b;
+  background: rgba(111, 137, 127, 0.18);
+  color: #436057;
 }
 
 .publication-page {
