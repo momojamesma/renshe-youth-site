@@ -10,22 +10,14 @@ const addPublicationButton = document.getElementById("add-publication-button");
 const adminAccountList = document.getElementById("admin-account-list");
 const adminMessage = document.getElementById("admin-message");
 const createAdminButton = document.getElementById("create-admin-button");
-
-const DEFAULT_SECTION_COLORS = {
-  header: "#f5f1e8",
-  hero: "#f2eadf",
-  highlights: "#f7f1e8",
-  donate: "#f1e7d8",
-  publications: "#f8f3ec",
-  about: "#efe5d8",
-  footer: "#23423a"
-};
-
-let currentData = null;
-let currentAdminUsername = "";
+const importInstagramButton = document.getElementById("import-instagram-button");
+const publicationImportMessage = document.getElementById("publication-import-message");
 
 const ADMIN_USERNAME_RULE = /^[A-Za-z0-9._]{1,30}$/;
 const PROTECTED_ADMIN_USERNAME = "renshe_admin";
+
+let currentData = null;
+let currentAdminUsername = "";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -37,7 +29,7 @@ function escapeHtml(value) {
 
 function validateAdminCredentials(username, password) {
   if (!ADMIN_USERNAME_RULE.test(username)) {
-    return "帳號需為 1 到 30 字元，只能使用英文、數字、底線(_)與句點(.)，不可有空格。";
+    return "帳號需為 1 到 30 字，只能使用英文字母、數字、底線與句點。";
   }
 
   if (typeof password !== "string" || password.length < 8) {
@@ -79,22 +71,15 @@ function createPublicationFields(item, index) {
   `;
 }
 
+function renderPublications() {
+  publicationEditor.innerHTML = (currentData?.publications || []).map(createPublicationFields).join("");
+}
+
 function renderAdminAccounts(admins) {
   adminAccountList.innerHTML = admins
     .map((item) => {
-      const deleteButton =
-        item.username === PROTECTED_ADMIN_USERNAME
-          ? ""
-          : `
-            <button
-              class="button secondary delete-admin-button"
-              type="button"
-              data-username="${escapeHtml(item.username)}"
-              ${item.username === currentAdminUsername ? "disabled" : ""}
-            >
-              刪除管理員
-            </button>
-          `;
+      const canDelete =
+        item.username !== PROTECTED_ADMIN_USERNAME && item.username !== currentAdminUsername;
 
       return `
         <article class="publication-editor-item">
@@ -105,22 +90,18 @@ function renderAdminAccounts(admins) {
                 item.createdAt ? new Date(item.createdAt).toLocaleString("zh-TW") : "未提供"
               }</p>
             </div>
-            ${deleteButton}
+            ${
+              canDelete
+                ? `<button class="button secondary delete-admin-button" type="button" data-username="${escapeHtml(
+                    item.username
+                  )}">刪除管理員</button>`
+                : ""
+            }
           </div>
         </article>
       `;
     })
     .join("");
-}
-
-function getSafeAppearance(organization) {
-  return {
-    brandMarkText: organization?.appearance?.brandMarkText ?? "RY",
-    sectionColors: {
-      ...DEFAULT_SECTION_COLORS,
-      ...(organization?.appearance?.sectionColors || {})
-    }
-  };
 }
 
 function getSafeDonation(data) {
@@ -140,28 +121,29 @@ function getSafeDonation(data) {
 }
 
 function fillForm(data) {
-  currentData = data;
-  const donation = getSafeDonation(data);
-  const appearance = getSafeAppearance(data.organization);
+  currentData = {
+    ...data,
+    organization: data.organization || {},
+    donation: data.donation || {},
+    publications: Array.isArray(data.publications) ? data.publications : []
+  };
 
-  document.getElementById("organization-name-input").value = data.organization?.name ?? "";
-  document.getElementById("organization-tagline-input").value = data.organization?.tagline ?? "";
-  document.getElementById("organization-mission-input").value = data.organization?.mission ?? "";
-  document.getElementById("avatar-url-input").value = data.organization?.avatarUrl ?? "";
-  document.getElementById("brand-mark-text-input").value = appearance.brandMarkText;
-  document.getElementById("color-header-input").value = appearance.sectionColors.header;
-  document.getElementById("color-hero-input").value = appearance.sectionColors.hero;
-  document.getElementById("color-highlights-input").value = appearance.sectionColors.highlights;
-  document.getElementById("color-donate-input").value = appearance.sectionColors.donate;
-  document.getElementById("color-publications-input").value = appearance.sectionColors.publications;
-  document.getElementById("color-about-input").value = appearance.sectionColors.about;
-  document.getElementById("color-footer-input").value = appearance.sectionColors.footer;
-  document.getElementById("about-paragraph-1").value = data.organization?.about?.[0] ?? "";
-  document.getElementById("about-paragraph-2").value = data.organization?.about?.[1] ?? "";
-  document.getElementById("about-paragraph-3").value = data.organization?.about?.[2] ?? "";
-  document.getElementById("highlight-1").value = data.organization?.highlights?.[0] ?? "";
-  document.getElementById("highlight-2").value = data.organization?.highlights?.[1] ?? "";
-  document.getElementById("highlight-3").value = data.organization?.highlights?.[2] ?? "";
+  const donation = getSafeDonation(currentData);
+  const appearance = currentData.organization?.appearance || {};
+
+  document.getElementById("organization-name-input").value = currentData.organization?.name ?? "";
+  document.getElementById("organization-tagline-input").value =
+    currentData.organization?.tagline ?? "";
+  document.getElementById("organization-mission-input").value =
+    currentData.organization?.mission ?? "";
+  document.getElementById("avatar-url-input").value = currentData.organization?.avatarUrl ?? "";
+  document.getElementById("brand-mark-text-input").value = appearance.brandMarkText ?? "RY";
+  document.getElementById("about-paragraph-1").value = currentData.organization?.about?.[0] ?? "";
+  document.getElementById("about-paragraph-2").value = currentData.organization?.about?.[1] ?? "";
+  document.getElementById("about-paragraph-3").value = currentData.organization?.about?.[2] ?? "";
+  document.getElementById("highlight-1").value = currentData.organization?.highlights?.[0] ?? "";
+  document.getElementById("highlight-2").value = currentData.organization?.highlights?.[1] ?? "";
+  document.getElementById("highlight-3").value = currentData.organization?.highlights?.[2] ?? "";
 
   document.getElementById("donation-title-input").value = donation.title;
   document.getElementById("donation-raised-input").value = donation.raised;
@@ -170,14 +152,17 @@ function fillForm(data) {
   document.getElementById("donation-summary-input").value = donation.summary;
   document.getElementById("transfer-bank-name-input").value = donation.bankTransfer.bankName;
   document.getElementById("transfer-account-name-input").value = donation.bankTransfer.accountName;
-  document.getElementById("transfer-account-number-input").value = donation.bankTransfer.accountNumber;
+  document.getElementById("transfer-account-number-input").value =
+    donation.bankTransfer.accountNumber;
   document.getElementById("transfer-note-input").value = donation.bankTransfer.note;
+  document.getElementById("instagram-post-url").value = "";
+  publicationImportMessage.textContent = "";
 
-  publicationEditor.innerHTML = (data.publications || []).map(createPublicationFields).join("");
+  renderPublications();
 }
 
 function collectPublications() {
-  return currentData.publications.map((item) => {
+  return (currentData?.publications || []).map((item) => {
     const updated = { ...item };
     publicationEditor.querySelectorAll(`[data-id="${item.id}"]`).forEach((field) => {
       updated[field.dataset.field] = field.value.trim();
@@ -195,16 +180,7 @@ function collectOrganization() {
     avatarUrl: document.getElementById("avatar-url-input").value.trim(),
     appearance: {
       ...(currentData.organization?.appearance || {}),
-      brandMarkText: document.getElementById("brand-mark-text-input").value.trim() || "RY",
-      sectionColors: {
-        header: document.getElementById("color-header-input").value,
-        hero: document.getElementById("color-hero-input").value,
-        highlights: document.getElementById("color-highlights-input").value,
-        donate: document.getElementById("color-donate-input").value,
-        publications: document.getElementById("color-publications-input").value,
-        about: document.getElementById("color-about-input").value,
-        footer: document.getElementById("color-footer-input").value
-      }
+      brandMarkText: document.getElementById("brand-mark-text-input").value.trim() || "RY"
     },
     about: [
       document.getElementById("about-paragraph-1").value.trim(),
@@ -257,6 +233,12 @@ async function fetchAdminAccounts() {
   return response.json();
 }
 
+function getNextPublicationId() {
+  return (
+    (currentData?.publications || []).reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1
+  );
+}
+
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   loginMessage.textContent = "";
@@ -277,7 +259,7 @@ loginForm.addEventListener("submit", async (event) => {
 
   const result = await response.json();
   if (!response.ok) {
-    loginMessage.textContent = result.error || "登入失敗";
+    loginMessage.textContent = result.error || "登入失敗。";
     return;
   }
 
@@ -308,12 +290,12 @@ dashboardForm.addEventListener("submit", async (event) => {
 
   const result = await response.json();
   if (!response.ok) {
-    saveMessage.textContent = result.error || "儲存失敗";
+    saveMessage.textContent = result.error || "儲存失敗。";
     return;
   }
 
   fillForm(result);
-  saveMessage.textContent = "內容已儲存。";
+  saveMessage.textContent = "網站設定已更新。";
 });
 
 addPublicationButton.addEventListener("click", () => {
@@ -321,15 +303,12 @@ addPublicationButton.addEventListener("click", () => {
     return;
   }
 
-  const nextId =
-    currentData.publications.reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
-
   currentData = {
     ...currentData,
     publications: [
-      ...currentData.publications,
+      ...(currentData.publications || []),
       {
-        id: nextId,
+        id: getNextPublicationId(),
         title: "新刊物標題",
         tag: "",
         description: "請輸入刊物說明。",
@@ -338,7 +317,7 @@ addPublicationButton.addEventListener("click", () => {
     ]
   };
 
-  publicationEditor.innerHTML = currentData.publications.map(createPublicationFields).join("");
+  renderPublications();
 });
 
 publicationEditor.addEventListener("click", (event) => {
@@ -352,7 +331,62 @@ publicationEditor.addEventListener("click", (event) => {
     ...currentData,
     publications: currentData.publications.filter((item) => Number(item.id) !== removeId)
   };
-  publicationEditor.innerHTML = currentData.publications.map(createPublicationFields).join("");
+  renderPublications();
+});
+
+importInstagramButton.addEventListener("click", async () => {
+  if (!currentData) {
+    return;
+  }
+
+  const urlInput = document.getElementById("instagram-post-url");
+  const url = urlInput.value.trim();
+  publicationImportMessage.textContent = "";
+
+  if (!url) {
+    publicationImportMessage.textContent = "請先貼上 Instagram 貼文網址。";
+    return;
+  }
+
+  importInstagramButton.disabled = true;
+
+  try {
+    const response = await fetch("/api/admin/publications/import-instagram", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ url })
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      publicationImportMessage.textContent = result.error || "Instagram 匯入失敗。";
+      return;
+    }
+
+    currentData = {
+      ...currentData,
+      publications: [
+        ...(currentData.publications || []),
+        {
+          id: getNextPublicationId(),
+          title: result.publication.title,
+          tag: result.publication.tag,
+          description: result.publication.description,
+          content: result.publication.content
+        }
+      ]
+    };
+
+    renderPublications();
+    urlInput.value = "";
+    publicationImportMessage.textContent = "已匯入為刊物草稿，記得按下「儲存網站設定」。";
+  } catch (error) {
+    publicationImportMessage.textContent = "Instagram 匯入失敗，請稍後再試。";
+  } finally {
+    importInstagramButton.disabled = false;
+  }
 });
 
 createAdminButton.addEventListener("click", async () => {
@@ -376,7 +410,7 @@ createAdminButton.addEventListener("click", async () => {
 
   const result = await response.json();
   if (!response.ok) {
-    adminMessage.textContent = result.error || "新增管理員失敗";
+    adminMessage.textContent = result.error || "新增管理員失敗。";
     return;
   }
 
@@ -410,7 +444,7 @@ adminAccountList.addEventListener("click", async (event) => {
 
   const result = await response.json();
   if (!response.ok) {
-    adminMessage.textContent = result.error || "刪除管理員失敗";
+    adminMessage.textContent = result.error || "刪除管理員失敗。";
     return;
   }
 
@@ -420,20 +454,21 @@ adminAccountList.addEventListener("click", async (event) => {
 
 logoutButton.addEventListener("click", async () => {
   await fetch("/api/logout", { method: "POST" });
-  loginForm.reset();
-  currentAdminUsername = "";
   showDashboard(false);
+  loginForm.reset();
+  loginMessage.textContent = "";
+  saveMessage.textContent = "";
+  adminMessage.textContent = "";
+  publicationImportMessage.textContent = "";
 });
 
-(async function init() {
-  try {
-    const session = await fetchAdminSession();
+Promise.all([fetchAdminSession(), fetchSiteData(), fetchAdminAccounts()])
+  .then(([session, siteData, accounts]) => {
     currentAdminUsername = session.username;
-    const [siteData, accounts] = await Promise.all([fetchSiteData(), fetchAdminAccounts()]);
     fillForm(siteData);
     renderAdminAccounts(accounts.admins);
     showDashboard(true);
-  } catch (error) {
+  })
+  .catch(() => {
     showDashboard(false);
-  }
-})();
+  });

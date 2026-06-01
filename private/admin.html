@@ -11,11 +11,11 @@
       <section id="login-view" class="admin-card narrow">
         <p class="eyebrow">Admin Login</p>
         <h1>後台登入</h1>
-        <p class="caption">請使用管理員帳號與密碼登入，登入後即可管理網站內容、顏色與頭像設定。</p>
+        <p class="caption">請輸入管理員帳號與密碼，登入後即可調整網站內容、募款資訊與刊物資料。</p>
         <form id="login-form" class="stack-form">
           <label>
             帳號
-            <input type="text" name="username" placeholder="請輸入帳號" required />
+            <input type="text" name="username" placeholder="請輸入管理員帳號" required />
           </label>
           <label>
             密碼
@@ -38,7 +38,7 @@
         <form id="dashboard-form" class="stack-form">
           <div class="section-heading compact">
             <h2>組織資訊</h2>
-            <p class="caption">更新首頁名稱、標語、使命與品牌頭像。</p>
+            <p class="caption">可調整網站名稱、首頁主標、使命文字與品牌頭像。</p>
           </div>
 
           <div class="admin-grid">
@@ -47,7 +47,7 @@
               <input id="organization-name-input" type="text" required />
             </label>
             <label>
-              首頁標語
+              首頁主標
               <input id="organization-tagline-input" type="text" required />
             </label>
             <label>
@@ -63,57 +63,21 @@
 
           <div class="admin-grid">
             <label>
-              頭像網址
+              頭像圖片網址
               <input id="avatar-url-input" type="url" placeholder="https://example.com/avatar.jpg" />
             </label>
             <label>
-              頭像文字
+              品牌縮寫
               <input id="brand-mark-text-input" type="text" maxlength="4" placeholder="RY" />
             </label>
             <div class="button-column">
-              <span class="caption">若未填頭像網址，前台會顯示頭像文字。</span>
+              <span class="caption">若未提供頭像圖片，前台會顯示品牌縮寫作為圖像替代。</span>
             </div>
           </div>
 
           <div class="section-heading compact">
-            <h2>區塊顏色</h2>
-            <p class="caption">可分別調整前台各區塊背景色，建議使用較柔和的色彩以維持可讀性。</p>
-          </div>
-
-          <div class="admin-grid">
-            <label>
-              Header
-              <input id="color-header-input" type="color" />
-            </label>
-            <label>
-              Hero
-              <input id="color-hero-input" type="color" />
-            </label>
-            <label>
-              重點議題
-              <input id="color-highlights-input" type="color" />
-            </label>
-            <label>
-              募款
-              <input id="color-donate-input" type="color" />
-            </label>
-            <label>
-              刊物
-              <input id="color-publications-input" type="color" />
-            </label>
-            <label>
-              關於我們
-              <input id="color-about-input" type="color" />
-            </label>
-            <label>
-              Footer
-              <input id="color-footer-input" type="color" />
-            </label>
-          </div>
-
-          <div class="section-heading compact">
             <h2>關於我們</h2>
-            <p class="caption">前台會顯示三段關於我們內容，建議依序放入定位、方法與想做的事。</p>
+            <p class="caption">這三段文字會顯示在前台的關於我們區塊。</p>
           </div>
 
           <div class="about-editor">
@@ -132,8 +96,8 @@
           </div>
 
           <div class="section-heading compact">
-            <h2>首頁重點</h2>
-            <p class="caption">這三則短句會出現在首頁重點卡片中。</p>
+            <h2>重點議題</h2>
+            <p class="caption">首頁三張重點卡片的標題可在此調整。</p>
           </div>
 
           <div class="about-editor">
@@ -152,8 +116,8 @@
           </div>
 
           <div class="section-heading compact">
-            <h2>募款資訊</h2>
-            <p class="caption">這裡可以調整前台的募款標題、目前金額、目標金額與匯款說明。</p>
+            <h2>募款資料</h2>
+            <p class="caption">可調整募款標題、已募金額、目標金額與前台說明文字。</p>
           </div>
 
           <div class="admin-grid">
@@ -183,7 +147,7 @@
 
           <div class="section-heading compact">
             <h2>匯款資訊</h2>
-            <p class="caption">前台募款區塊會同步顯示以下匯款資料。</p>
+            <p class="caption">可在前台募款區顯示銀行、戶名、匯款帳號與備註。</p>
           </div>
 
           <div class="admin-grid">
@@ -208,17 +172,31 @@
 
           <div class="section-heading compact">
             <h2>刊物資料</h2>
-            <p class="caption">可新增、刪除與編輯刊物，包含標題、標籤、說明與內文。</p>
+            <p class="caption">可新增、刪除與編輯刊物，包含標題、標籤、說明與完整內文。</p>
           </div>
 
-          <div class="editor-toolbar">
+          <div class="editor-toolbar import-toolbar">
             <button id="add-publication-button" class="button secondary" type="button">新增刊物</button>
+            <div class="import-instagram-panel">
+              <label for="instagram-post-url" class="caption">Instagram 貼文網址匯入</label>
+              <div class="inline-input-group">
+                <input
+                  id="instagram-post-url"
+                  type="url"
+                  placeholder="貼上 Instagram 貼文或 Reels 網址"
+                />
+                <button id="import-instagram-button" class="button secondary" type="button">
+                  匯入為刊物
+                </button>
+              </div>
+              <p id="publication-import-message" class="message compact"></p>
+            </div>
           </div>
           <div id="publication-editor" class="publication-editor"></div>
 
           <div class="section-heading compact">
             <h2>管理員帳號</h2>
-            <p class="caption">可以新增或刪除管理員。初始管理員 `renshe_admin` 不可刪除。</p>
+            <p class="caption">可新增與刪除管理員。初始帳號 <code>renshe_admin</code> 不可刪除。</p>
           </div>
 
           <div id="admin-account-list" class="admin-account-list"></div>
@@ -233,17 +211,15 @@
               <input id="new-admin-password" type="password" />
             </label>
             <div class="button-column">
-              <span class="caption">建立後可直接用新帳密登入後台。</span>
+              <span class="caption">建立完成後，新管理員即可用自己的帳密登入後台。</span>
               <button id="create-admin-button" class="button secondary" type="button">新增管理員</button>
             </div>
           </div>
 
-          <p class="caption">
-            帳號限英文、數字、底線 `_` 與句點 `.`，不可有空格，最長 30 字元。密碼請至少 8 碼，建議混合英文字母與數字。
-          </p>
+          <p class="caption">帳號只能使用英文字母、數字、底線 <code>_</code> 與句點 <code>.</code>，不可有空格，最長 30 字元；密碼至少 8 碼。</p>
 
           <p id="admin-message" class="message"></p>
-          <button class="button primary" type="submit">儲存變更</button>
+          <button class="button primary" type="submit">儲存網站設定</button>
           <p id="save-message" class="message"></p>
         </form>
       </section>

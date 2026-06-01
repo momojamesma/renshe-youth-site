@@ -1,28 +1,9 @@
-const DEFAULT_SECTION_COLORS = {
-  header: "#f5f1e8",
-  publications: "#f8f3ec"
-};
-
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
-}
-
-function getContrastColor(hexColor, light = "#fffdf8", dark = "#203039") {
-  if (!hexColor || !/^#([0-9a-f]{6})$/i.test(hexColor)) {
-    return dark;
-  }
-
-  const normalized = hexColor.slice(1);
-  const red = Number.parseInt(normalized.slice(0, 2), 16);
-  const green = Number.parseInt(normalized.slice(2, 4), 16);
-  const blue = Number.parseInt(normalized.slice(4, 6), 16);
-  const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
-
-  return brightness < 150 ? light : dark;
 }
 
 function applyBranding(organization) {
@@ -43,28 +24,6 @@ function applyBranding(organization) {
     avatar.classList.add("hidden");
     markText.classList.remove("hidden");
   }
-}
-
-function applySectionColors(organization) {
-  const sectionColors = {
-    ...DEFAULT_SECTION_COLORS,
-    ...(organization?.appearance?.sectionColors || {})
-  };
-
-  const themeMap = {
-    header: document.querySelector(".theme-header"),
-    publications: document.querySelector(".theme-publications")
-  };
-
-  Object.entries(themeMap).forEach(([key, element]) => {
-    if (!element) {
-      return;
-    }
-
-    const color = sectionColors[key] || DEFAULT_SECTION_COLORS[key];
-    element.style.setProperty("--section-bg", color);
-    element.style.setProperty("--section-text", getContrastColor(color));
-  });
 }
 
 function getPublicationId() {
@@ -89,12 +48,12 @@ async function loadPublication() {
   const publication = (data.publications || []).find((item) => Number(item.id) === publicationId);
 
   applyBranding(data.organization || {});
-  applySectionColors(data.organization || {});
 
   if (!publication) {
     document.getElementById("publication-title").textContent = "找不到這篇刊物";
     document.getElementById("publication-tag").classList.add("hidden");
-    document.getElementById("publication-description").textContent = "這篇內容可能已被移除，或網址有誤。";
+    document.getElementById("publication-description").textContent =
+      "這篇內容可能已被移除，或網址有誤。";
     document.getElementById("publication-content").innerHTML = "";
     return;
   }

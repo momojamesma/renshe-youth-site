@@ -1,7 +1,9 @@
 const http = require("http");
+const https = require("https");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { execFile } = require("child_process");
 const { URL } = require("url");
 
 const PORT = process.env.PORT || 3000;
@@ -49,6 +51,151 @@ function getAdminCredentialError(username, password) {
   }
 
   return "";
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function decodeHtmlEntities(value) {
+  return String(value || "")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&#x27;", "'")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&#10;", "\n")
+    .replaceAll("&#13;", "\r");
+}
+
+function normalizeWhitespace(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractMetaContent(html, attribute, key) {
+  const escapedKey = escapeRegExp(key);
+  const patterns = [
+    new RegExp(
+      `<meta[^>]+${attribute}=(["'])${escapedKey}\\1[^>]+content=(["'])([\\s\\S]*?)\\2[^>]*>`,
+      "i"
+    ),
+    new RegExp(
+      `<meta[^>]+content=(["'])([\\s\\S]*?)\\1[^>]+${attribute}=(["'])${escapedKey}\\3[^>]*>`,
+      "i"
+    )
+  ];
+
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match) {
+      const value = match[3] || match[2];
+      if (value) {
+        return decodeHtmlEntities(value);
+      }
+    }
+  }
+
+  return "";
+}
+
+function fetchRemoteText(targetUrl) {
+  return new Promise((resolve, reject) => {
+    const userAgent =
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36";
+    const curlBinary = process.platform === "win32" ? "curl.exe" : "curl";
+    const args = [
+      "-L",
+      "--silent",
+      "--show-error",
+      "--max-time",
+      "12",
+      "-A",
+      userAgent,
+      "-H",
+      "Accept: text/html,application/xhtml+xml",
+      "-H",
+      "Accept-Language: zh-TW,zh;q=0.9,en;q=0.8",
+      "-H",
+      "Cache-Control: no-cache",
+      targetUrl
+    ];
+
+    execFile(curlBinary, args, { maxBuffer: 8 * 1024 * 1024 }, (error, stdout, stderr) => {
+      if (error) {
+        reject(new Error(stderr || error.message || "Remote request failed."));
+        return;
+      }
+
+      resolve(stdout);
+    });
+  });
+}
+
+function validateInstagramPostUrl(input) {
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(input);
+  } catch (error) {
+    return null;
+  }
+
+  const hostname = parsedUrl.hostname.toLowerCase();
+  const allowedHosts = new Set(["instagram.com", "www.instagram.com"]);
+  if (!allowedHosts.has(hostname)) {
+    return null;
+  }
+
+  const parts = parsedUrl.pathname.split("/").filter(Boolean);
+  if (parts.length < 2 || !["p", "reel", "tv"].includes(parts[0])) {
+    return null;
+  }
+
+  return `https://www.instagram.com/${parts[0]}/${parts[1]}/`;
+}
+
+function derivePublicationFromInstagram(url, html) {
+  const ogTitle = extractMetaContent(html, "property", "og:title");
+  const ogDescription =
+    extractMetaContent(html, "property", "og:description") ||
+    extractMetaContent(html, "name", "description");
+  const pageTitleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  const pageTitle = decodeHtmlEntities(pageTitleMatch?.[1] || "");
+  const rawText = [ogTitle, ogDescription, pageTitle].find((item) => normalizeWhitespace(item)) || "";
+
+  let caption = "";
+
+  const titleCaptionMatch = ogTitle.match(/on Instagram:\s*["“](.+?)["”]\s*$/i);
+  if (titleCaptionMatch?.[1]) {
+    caption = titleCaptionMatch[1];
+  }
+
+  if (!caption) {
+    const descriptionCaptionMatch = ogDescription.match(/["“](.+?)["”]/);
+    if (descriptionCaptionMatch?.[1]) {
+      caption = descriptionCaptionMatch[1];
+    }
+  }
+
+  caption = normalizeWhitespace(caption);
+  const fallbackText = normalizeWhitespace(rawText)
+    .replace(/\s*on Instagram:?\s*/i, " ")
+    .replace(/\s*•\s*Instagram.*$/i, "")
+    .trim();
+  const bodyText = caption || fallbackText || "此刊物由 Instagram 貼文匯入，請補充完整內容。";
+  const title = bodyText.length > 30 ? `${bodyText.slice(0, 30).trim()}…` : bodyText;
+  const description =
+    bodyText.length > 90 ? `${bodyText.slice(0, 90).trim()}…` : bodyText;
+  const content = `${bodyText}\n\n原始 Instagram 貼文網址：${url}`;
+
+  return {
+    title: title || "Instagram 貼文整理",
+    tag: "Instagram",
+    description: description || "從 Instagram 貼文匯入的刊物草稿。",
+    content
+  };
 }
 
 function ensureDataDirectory() {
@@ -274,15 +421,7 @@ function sanitizeOrganizationInput(current, incoming) {
     incoming.appearance && typeof incoming.appearance === "object"
       ? {
           ...(current.appearance || {}),
-          ...incoming.appearance,
-          sectionColors:
-            incoming.appearance.sectionColors &&
-            typeof incoming.appearance.sectionColors === "object"
-              ? {
-                  ...(current.appearance?.sectionColors || {}),
-                  ...incoming.appearance.sectionColors
-                }
-              : current.appearance?.sectionColors
+          ...incoming.appearance
         }
       : current.appearance;
 
@@ -606,6 +745,34 @@ async function handleApi(req, res, pathname) {
         .sort((left, right) => left.username.localeCompare(right.username))
     });
     return true;
+  }
+
+  if (pathname === "/api/admin/publications/import-instagram" && req.method === "POST") {
+    if (!requireAuth(req, res)) {
+      return true;
+    }
+
+    try {
+      const body = await parseBody(req);
+      const normalizedUrl = validateInstagramPostUrl(body.url);
+
+      if (!normalizedUrl) {
+        sendJson(res, 400, {
+          error: "請提供有效的 Instagram 貼文或 Reels 網址。"
+        });
+        return true;
+      }
+
+      const html = await fetchRemoteText(normalizedUrl);
+      const publication = derivePublicationFromInstagram(normalizedUrl, html);
+      sendJson(res, 200, { ok: true, publication });
+      return true;
+    } catch (error) {
+      sendJson(res, 502, {
+        error: "目前無法讀取這則 Instagram 貼文，請確認網址是否公開可見。"
+      });
+      return true;
+    }
   }
 
   if (pathname === "/api/admin/site-data" && req.method === "PUT") {

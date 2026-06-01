@@ -1,33 +1,9 @@
-const DEFAULT_SECTION_COLORS = {
-  header: "#f5f1e8",
-  hero: "#f2eadf",
-  highlights: "#f7f1e8",
-  donate: "#f1e7d8",
-  publications: "#f8f3ec",
-  about: "#efe5d8",
-  footer: "#23423a"
-};
-
 function formatCurrency(value) {
   return new Intl.NumberFormat("zh-TW", {
     style: "currency",
     currency: "TWD",
     maximumFractionDigits: 0
   }).format(Number(value) || 0);
-}
-
-function getContrastColor(hexColor, light = "#fffdf8", dark = "#203039") {
-  if (!hexColor || !/^#([0-9a-f]{6})$/i.test(hexColor)) {
-    return dark;
-  }
-
-  const normalized = hexColor.slice(1);
-  const red = Number.parseInt(normalized.slice(0, 2), 16);
-  const green = Number.parseInt(normalized.slice(2, 4), 16);
-  const blue = Number.parseInt(normalized.slice(4, 6), 16);
-  const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
-
-  return brightness < 150 ? light : dark;
 }
 
 function applyBranding(organization) {
@@ -50,33 +26,6 @@ function applyBranding(organization) {
   }
 }
 
-function applySectionColors(organization) {
-  const sectionColors = {
-    ...DEFAULT_SECTION_COLORS,
-    ...(organization?.appearance?.sectionColors || {})
-  };
-
-  const themeMap = {
-    header: document.querySelector(".theme-header"),
-    hero: document.querySelector(".theme-hero"),
-    highlights: document.querySelector(".theme-highlights"),
-    donate: document.querySelector(".theme-donate"),
-    publications: document.querySelector(".theme-publications"),
-    about: document.querySelector(".theme-about"),
-    footer: document.querySelector(".theme-footer")
-  };
-
-  Object.entries(themeMap).forEach(([key, element]) => {
-    if (!element) {
-      return;
-    }
-
-    const color = sectionColors[key] || DEFAULT_SECTION_COLORS[key];
-    element.style.setProperty("--section-bg", color);
-    element.style.setProperty("--section-text", getContrastColor(color));
-  });
-}
-
 function renderHighlights(items) {
   const container = document.getElementById("highlight-list");
   container.innerHTML = items
@@ -85,7 +34,7 @@ function renderHighlights(items) {
         <article>
           <p class="panel-label">Focus 0${index + 1}</p>
           <h3>${item}</h3>
-          <p>把抽象概念拆成更容易理解的內容，讓人文社會知識真正進入公共討論與日常生活。</p>
+          <p>從學生能理解的角度切入，把抽象的人文社會議題整理成可閱讀、可對話、可參與的公共內容。</p>
         </article>
       `
     )
@@ -138,7 +87,7 @@ function renderDonation(donation) {
     targetAmount.textContent = "";
     targetAmount.classList.add("hidden");
     progressBar.style.width = "100%";
-    progressCaption.textContent = "目前顯示已募得金額";
+    progressCaption.textContent = "目前僅顯示已募得金額";
   }
 
   const list = document.getElementById("donation-accounts");
@@ -161,7 +110,7 @@ function renderPublications(items) {
               ${item.tag ? `<span class="topic-pill">${item.tag}</span>` : ""}
             </div>
           </header>
-          <p>${item.description}</p>
+          <p>${item.description || ""}</p>
           <a class="inline-link publication-link" href="/publication.html?id=${item.id}">閱讀完整刊物</a>
         </article>
       `
@@ -214,9 +163,9 @@ async function loadSite() {
   const data = await response.json();
 
   applyBranding(data.organization || {});
-  applySectionColors(data.organization || {});
 
-  document.getElementById("hero-title").textContent = data.organization?.tagline || "人社青年";
+  document.getElementById("hero-title").textContent =
+    data.organization?.tagline || "用學生的眼光看人社，用人社的視角看社會";
   document.getElementById("hero-mission").textContent = data.organization?.mission || "";
 
   renderThemes(data.organization?.themes || []);
@@ -254,9 +203,7 @@ function bindMobileMenu() {
   });
 
   links.forEach((link) => {
-    link.addEventListener("click", () => {
-      closeMenu();
-    });
+    link.addEventListener("click", closeMenu);
   });
 
   document.addEventListener("keydown", (event) => {
@@ -286,5 +233,5 @@ function bindMobileMenu() {
 
 bindMobileMenu();
 loadSite().catch(() => {
-  document.getElementById("hero-mission").textContent = "網站資料暫時無法載入，請稍後再試。";
+  document.getElementById("hero-mission").textContent = "網站資料載入失敗，請稍後再試。";
 });
