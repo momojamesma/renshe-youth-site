@@ -85,7 +85,7 @@ function renderHighlights(items) {
         <article>
           <p class="panel-label">Focus 0${index + 1}</p>
           <h3>${item}</h3>
-          <p>從青年視角出發，把抽象議題拆成可理解、可討論、可參與的公共內容。</p>
+          <p>把抽象概念拆成更容易理解的內容，讓人文社會知識真正進入公共討論與日常生活。</p>
         </article>
       `
     )
@@ -189,8 +189,8 @@ function renderHeroStats(data) {
     data.donation?.showTarget !== false && target > 0 ? Math.round((raised / target) * 100) : null;
 
   const stats = [
-    { value: `${data.organization?.themes?.length || 0}+`, label: "關注議題" },
-    { value: `${data.publications?.length || 0}`, label: "刊物與文章" },
+    { value: `${data.organization?.themes?.length || 0}+`, label: "核心議題" },
+    { value: `${data.publications?.length || 0}`, label: "刊物整理" },
     {
       value: progress === null ? formatCurrency(raised) : `${progress}%`,
       label: progress === null ? "目前募得" : "募款進度"
@@ -216,34 +216,71 @@ async function loadSite() {
   applyBranding(data.organization || {});
   applySectionColors(data.organization || {});
 
-  document.getElementById("hero-title").textContent = data.organization.tagline;
-  document.getElementById("hero-mission").textContent = data.organization.mission;
+  document.getElementById("hero-title").textContent = data.organization?.tagline || "人社青年";
+  document.getElementById("hero-mission").textContent = data.organization?.mission || "";
 
-  renderThemes(data.organization.themes || []);
+  renderThemes(data.organization?.themes || []);
   renderHeroStats(data);
-  renderHighlights(data.organization.highlights || []);
+  renderHighlights(data.organization?.highlights || []);
   renderDonation(data.donation || {});
   renderPublications(data.publications || []);
-  renderAbout(data.organization.about || []);
-  renderInstagram(data.organization.instagram);
+  renderAbout(data.organization?.about || []);
+  renderInstagram(data.organization?.instagram);
 }
 
 function bindMobileMenu() {
   const toggle = document.querySelector(".mobile-menu-toggle");
   const menu = document.getElementById("mobile-menu");
+  if (!toggle || !menu) {
+    return;
+  }
+
   const links = menu.querySelectorAll("a");
+  const closeMenu = () => {
+    toggle.setAttribute("aria-expanded", "false");
+    menu.classList.remove("open");
+    document.body.classList.remove("menu-open");
+  };
+
+  const setMenuState = (expanded) => {
+    toggle.setAttribute("aria-expanded", String(expanded));
+    menu.classList.toggle("open", expanded);
+    document.body.classList.toggle("menu-open", expanded);
+  };
 
   toggle.addEventListener("click", () => {
     const expanded = toggle.getAttribute("aria-expanded") === "true";
-    toggle.setAttribute("aria-expanded", String(!expanded));
-    menu.classList.toggle("open");
+    setMenuState(!expanded);
   });
 
   links.forEach((link) => {
     link.addEventListener("click", () => {
-      toggle.setAttribute("aria-expanded", "false");
-      menu.classList.remove("open");
+      closeMenu();
     });
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeMenu();
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!menu.classList.contains("open")) {
+      return;
+    }
+
+    if (menu.contains(event.target) || toggle.contains(event.target)) {
+      return;
+    }
+
+    closeMenu();
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 900) {
+      closeMenu();
+    }
   });
 }
 

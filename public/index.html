@@ -20,7 +20,7 @@
           <span id="brand-mark-text">RY</span>
         </span>
         <div>
-          <p class="eyebrow">Public Participation Collective</p>
+          <p class="eyebrow">Humanities, Society, Youth</p>
           <h1 id="brand-name">人社青年</h1>
         </div>
       </div>
@@ -44,8 +44,16 @@
         </div>
       </nav>
 
-      <button class="mobile-menu-toggle" aria-expanded="false" aria-controls="mobile-menu">
-        選單
+      <button
+        class="mobile-menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+        aria-label="切換導覽選單"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
       </button>
     </header>
 
@@ -67,19 +75,21 @@
           </div>
           <h2 id="hero-title">把人文社會帶回公共討論現場</h2>
           <p id="hero-mission"></p>
-          <div id="theme-list" class="theme-list"></div>
+
           <div class="hero-actions">
             <a class="button primary" href="#donate">支持募款</a>
             <a class="button secondary" href="#publications">閱讀刊物</a>
           </div>
+
+          <div id="theme-list" class="theme-list" aria-label="核心議題"></div>
           <div id="hero-stats" class="hero-stats" aria-label="網站重點統計"></div>
         </div>
 
         <aside class="hero-panel">
           <p class="panel-label">Instagram</p>
-          <h3>從貼文、刊物到公共參與，我們持續把複雜議題轉譯成青年能理解的語言。</h3>
+          <h3>從貼文、刊物到公共參與，把複雜議題整理成青年能進入的討論。</h3>
           <p>
-            人社青年聚焦人文社會議題的知識整理、公共討論與青年觀點轉譯，讓更多人可以用更靠近生活的方式理解社會。
+            人社青年持續用知識整理、內容轉譯與青年觀點，讓公共議題不只停留在資訊接收，而能變成更細緻的理解與參與。
           </p>
           <div class="hero-panel-divider"></div>
           <div class="hero-metrics">
@@ -110,15 +120,15 @@
       <section class="manifesto-strip">
         <div class="manifesto-card">
           <p class="panel-label">Manifesto</p>
-          <p>我們相信公共參與不該只是少數人的語言，而是每個青年都能進入的討論現場。</p>
+          <p>我們相信公共參與不該只是少數人的語言，而應該是一個更多青年能安心進入的討論現場。</p>
         </div>
         <div class="manifesto-card">
           <p class="panel-label">Method</p>
-          <p>以學生視角整理議題、拆解觀念，讓抽象的人文社會理論走進真實生活。</p>
+          <p>從學生視角整理理論、新聞與社會現象，讓抽象概念能被理解、被討論，也被帶回日常。</p>
         </div>
         <div class="manifesto-card">
           <p class="panel-label">Audience</p>
-          <p>給正在關心社會、想理解公共議題、也願意開始參與的人。</p>
+          <p>給正在關心社會、想培養判斷，也願意開始參與公共討論的人。</p>
         </div>
       </section>
 
@@ -127,7 +137,7 @@
           <p class="eyebrow">Why We Organize</p>
           <h2>我們為什麼持續做這件事</h2>
           <p class="section-intro">
-            從社會建構、特權、自由、霸權到轉型正義，我們希望把看似遙遠的議題，變成能被理解與參與的討論。
+            從社會建構、特權、自由、霸權到轉型正義，我們希望把看似遙遠的議題，重新整理成更靠近生活、更適合青年閱讀的內容。
           </p>
         </div>
         <div id="highlight-list" class="card-grid"></div>
@@ -139,6 +149,7 @@
           <h2 id="donation-title"></h2>
           <p id="donation-summary"></p>
           <ul id="donation-accounts" class="bullet-list"></ul>
+
           <div id="bank-transfer-card" class="bank-transfer-card hidden">
             <p class="panel-label">Bank Transfer</p>
             <h3>匯款資訊</h3>
@@ -166,11 +177,11 @@
             <strong id="raised-amount">NT$0</strong>
             <span id="target-amount">/ NT$0</span>
           </div>
-          <div class="progress-track">
+          <div class="progress-track" aria-hidden="true">
             <div id="progress-bar" class="progress-bar"></div>
           </div>
           <p id="progress-caption" class="progress-caption"></p>
-          <p class="caption">你的支持會用在內容企劃、刊物製作、青年議題推廣與公共參與行動。</p>
+          <p class="caption">每一筆支持，都會成為內容企劃、刊物製作與公共參與行動的穩定基礎。</p>
         </div>
       </section>
 
@@ -179,7 +190,7 @@
           <p class="eyebrow">Publications</p>
           <h2>刊物與議題整理</h2>
           <p class="section-intro">
-            從短篇整理到完整刊物，這裡收錄我們對公共議題的拆解、觀點與延伸閱讀。
+            從貼文延伸到長篇閱讀，這裡收錄我們對公共議題的整理、觀點與能慢慢讀的完整內容。
           </p>
         </div>
         <div id="publication-list" class="publication-list"></div>
@@ -190,7 +201,7 @@
           <p class="eyebrow">About Us</p>
           <h2>關於我們</h2>
           <p class="section-intro">
-            人社青年是一群對人文社會充滿熱情的高中生與大學生，持續用青年視角理解社會、轉譯議題、投入公共參與。
+            人社青年是一群對人文社會充滿熱忱的高中生與大學生，持續透過整理、轉譯與討論，讓更多人能找到進入公共議題的方式。
           </p>
         </div>
         <div id="about-list" class="about-copy"></div>
@@ -202,11 +213,12 @@
         <p class="eyebrow">Join Us</p>
         <h2>一起把思辨帶進公共生活</h2>
         <p>
-          想合作、投稿、支持計畫，或單純想多認識人社青年，都可以到
+          如果你想合作、投稿、支持計畫，或只是想更認識人社青年，都可以到
           <a href="https://www.instagram.com/youth.hss/" target="_blank" rel="noreferrer">@youth.hss</a>
           找我們。
         </p>
       </div>
+
       <div class="footer-meta">
         <nav class="footer-nav" aria-label="頁尾導覽">
           <a href="#highlights">重點議題</a>
