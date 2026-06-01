@@ -10,8 +10,8 @@
   --muted: #67766f;
   --accent: #c77855;
   --accent-deep: #9b593d;
-  --forest: #6a847a;
-  --ink: #516961;
+  --forest: #8b7c6d;
+  --ink: #6f6256;
   --gold: #c8a46f;
   --shadow-soft: 0 20px 60px rgba(36, 53, 48, 0.08);
   --shadow-card: 0 18px 44px rgba(36, 53, 48, 0.12);
@@ -149,8 +149,8 @@ button {
 }
 
 .theme-footer {
-  --section-bg: #738b83;
-  --section-text: #fffaf3;
+  --section-bg: linear-gradient(180deg, #faf5ed 0%, #f1e7da 100%);
+  --section-text: var(--text);
 }
 
 .theme-hero,
@@ -214,9 +214,11 @@ button {
   display: grid;
   place-items: center;
   border-radius: 18px;
-  background: linear-gradient(145deg, #6f897f, #8ea59d);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: linear-gradient(145deg, #faf5ed, #f1e7da);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 10px 22px rgba(72, 56, 44, 0.08);
+  color: #6b5d50;
   font-weight: 800;
   letter-spacing: 0.08em;
   overflow: hidden;
@@ -423,7 +425,7 @@ button {
   min-height: 36px;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(111, 137, 127, 0.12);
+  background: rgba(250, 245, 237, 0.92);
   color: var(--forest);
   font-size: 0.9rem;
   font-weight: 700;
@@ -564,16 +566,16 @@ button {
 
 .hero-panel {
   background:
-    linear-gradient(180deg, rgba(115, 139, 131, 0.95), rgba(132, 156, 147, 0.93)),
-    var(--forest);
-  color: #fff;
+    linear-gradient(180deg, rgba(250, 245, 237, 0.98), rgba(241, 231, 218, 0.96)),
+    #faf5ed;
+  color: var(--text);
   box-shadow: var(--shadow-card);
 }
 
 .hero-panel .panel-label,
 .hero-panel p,
 .hero-panel span {
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(36, 53, 48, 0.78);
 }
 
 .hero-panel h3 {
@@ -586,7 +588,7 @@ button {
   width: 100%;
   height: 1px;
   margin: 22px 0 18px;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(111, 98, 86, 0.16);
 }
 
 .hero-metrics {
@@ -598,8 +600,8 @@ button {
 .hero-metrics article {
   padding: 16px 14px;
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(111, 98, 86, 0.1);
 }
 
 .inline-link {
@@ -608,7 +610,7 @@ button {
   min-height: 44px;
   margin-top: 18px;
   padding: 0 2px;
-  color: #fff;
+  color: var(--forest);
   font-weight: 700;
 }
 
@@ -785,7 +787,7 @@ button {
   height: 100%;
   width: 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, #7c958b, #d3b07c);
+  background: linear-gradient(90deg, #d7c4ab, #c8a46f);
 }
 
 .progress-caption {
@@ -838,13 +840,13 @@ button {
   min-height: 40px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(111, 137, 127, 0.12);
+  background: rgba(250, 245, 237, 0.96);
   color: var(--forest);
 }
 
 .publication-item .inline-link:hover {
-  background: rgba(111, 137, 127, 0.18);
-  color: #436057;
+  background: rgba(241, 231, 218, 0.98);
+  color: #6b5d50;
 }
 
 .publication-page {
