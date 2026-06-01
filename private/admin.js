@@ -12,12 +12,19 @@ const adminMessage = document.getElementById("admin-message");
 const createAdminButton = document.getElementById("create-admin-button");
 const importInstagramButton = document.getElementById("import-instagram-button");
 const publicationImportMessage = document.getElementById("publication-import-message");
+const avatarFileInput = document.getElementById("avatar-file-input");
+const avatarClearButton = document.getElementById("avatar-clear-button");
+const avatarPreview = document.getElementById("avatar-preview");
+const avatarPreviewFallback = document.getElementById("avatar-preview-fallback");
+const avatarFileMessage = document.getElementById("avatar-file-message");
 
 const ADMIN_USERNAME_RULE = /^[A-Za-z0-9._]{1,30}$/;
 const PROTECTED_ADMIN_USERNAME = "renshe_admin";
+const MAX_AVATAR_FILE_SIZE = 1.5 * 1024 * 1024;
 
 let currentData = null;
 let currentAdminUsername = "";
+let currentAvatarDataUrl = "";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -29,7 +36,7 @@ function escapeHtml(value) {
 
 function validateAdminCredentials(username, password) {
   if (!ADMIN_USERNAME_RULE.test(username)) {
-    return "帳號需為 1 到 30 字，只能使用英文字母、數字、底線與句點。";
+    return "帳號只能使用英文、數字、底線與句點，且長度需在 1 到 30 字元之間。";
   }
 
   if (typeof password !== "string" || password.length < 8) {
@@ -42,6 +49,31 @@ function validateAdminCredentials(username, password) {
 function showDashboard(show) {
   loginView.classList.toggle("hidden", show);
   dashboardView.classList.toggle("hidden", !show);
+}
+
+function renderAvatarPreview() {
+  const fallbackText = document.getElementById("brand-mark-text-input").value.trim() || "RY";
+  avatarPreviewFallback.textContent = fallbackText;
+
+  if (currentAvatarDataUrl) {
+    avatarPreview.src = currentAvatarDataUrl;
+    avatarPreview.classList.remove("hidden");
+    avatarPreviewFallback.classList.add("hidden");
+    return;
+  }
+
+  avatarPreview.removeAttribute("src");
+  avatarPreview.classList.add("hidden");
+  avatarPreviewFallback.classList.remove("hidden");
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("無法讀取圖片檔案。"));
+    reader.readAsDataURL(file);
+  });
 }
 
 function createPublicationFields(item, index) {
@@ -136,7 +168,8 @@ function fillForm(data) {
     currentData.organization.tagline ?? "";
   document.getElementById("organization-mission-input").value =
     currentData.organization.mission ?? "";
-  document.getElementById("avatar-url-input").value = currentData.organization.avatarUrl ?? "";
+  currentAvatarDataUrl = currentData.organization.avatarUrl ?? "";
+  avatarFileInput.value = "";
   document.getElementById("brand-mark-text-input").value = appearance.brandMarkText ?? "RY";
   document.getElementById("about-paragraph-1").value = currentData.organization.about?.[0] ?? "";
   document.getElementById("about-paragraph-2").value = currentData.organization.about?.[1] ?? "";
@@ -157,7 +190,9 @@ function fillForm(data) {
   document.getElementById("transfer-note-input").value = donation.bankTransfer.note;
   document.getElementById("instagram-post-url").value = "";
   publicationImportMessage.textContent = "";
+  avatarFileMessage.textContent = "";
 
+  renderAvatarPreview();
   renderPublications();
 }
 
@@ -177,7 +212,7 @@ function collectOrganization() {
     name: document.getElementById("organization-name-input").value.trim(),
     tagline: document.getElementById("organization-tagline-input").value.trim(),
     mission: document.getElementById("organization-mission-input").value.trim(),
-    avatarUrl: document.getElementById("avatar-url-input").value.trim(),
+    avatarUrl: currentAvatarDataUrl,
     appearance: {
       ...(currentData.organization?.appearance || {}),
       brandMarkText: document.getElementById("brand-mark-text-input").value.trim() || "RY"
@@ -301,7 +336,7 @@ dashboardForm.addEventListener("submit", async (event) => {
   }
 
   fillForm(result);
-  saveMessage.textContent = "網站設定已更新。";
+  saveMessage.textContent = "網站內容已儲存。";
 });
 
 addPublicationButton.addEventListener("click", () => {
@@ -387,7 +422,7 @@ importInstagramButton.addEventListener("click", async () => {
 
     renderPublications();
     urlInput.value = "";
-    publicationImportMessage.textContent = "已匯入為刊物草稿，記得按下「儲存網站設定」。";
+    publicationImportMessage.textContent = "已匯入為刊物草稿，請記得儲存網站內容。";
   } catch (error) {
     publicationImportMessage.textContent = "Instagram 匯入失敗，請稍後再試。";
   } finally {
@@ -458,14 +493,56 @@ adminAccountList.addEventListener("click", async (event) => {
   adminMessage.textContent = "管理員已刪除。";
 });
 
+avatarFileInput.addEventListener("change", async (event) => {
+  const file = event.target.files?.[0];
+  avatarFileMessage.textContent = "";
+
+  if (!file) {
+    return;
+  }
+
+  if (!file.type.startsWith("image/")) {
+    avatarFileMessage.textContent = "請選擇圖片檔案。";
+    avatarFileInput.value = "";
+    return;
+  }
+
+  if (file.size > MAX_AVATAR_FILE_SIZE) {
+    avatarFileMessage.textContent = "圖片檔案請控制在 1.5 MB 以內。";
+    avatarFileInput.value = "";
+    return;
+  }
+
+  try {
+    currentAvatarDataUrl = await readFileAsDataUrl(file);
+    renderAvatarPreview();
+    avatarFileMessage.textContent = "頭像已載入，記得按下儲存網站內容。";
+  } catch (error) {
+    avatarFileMessage.textContent = error.message || "讀取圖片失敗。";
+  }
+});
+
+avatarClearButton.addEventListener("click", () => {
+  currentAvatarDataUrl = "";
+  avatarFileInput.value = "";
+  avatarFileMessage.textContent = "頭像已移除，記得按下儲存網站內容。";
+  renderAvatarPreview();
+});
+
+document.getElementById("brand-mark-text-input").addEventListener("input", () => {
+  renderAvatarPreview();
+});
+
 logoutButton.addEventListener("click", async () => {
   await fetch("/api/logout", { method: "POST" });
   showDashboard(false);
   loginForm.reset();
   currentAdminUsername = "";
+  currentAvatarDataUrl = "";
   loginMessage.textContent = "";
   saveMessage.textContent = "";
   adminMessage.textContent = "";
+  avatarFileMessage.textContent = "";
   publicationImportMessage.textContent = "";
 });
 

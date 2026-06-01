@@ -516,10 +516,11 @@ function sendText(res, statusCode, text, headers = {}) {
 function parseBody(req) {
   return new Promise((resolve, reject) => {
     let raw = "";
+    const maxBodySize = 5 * 1024 * 1024;
 
     req.on("data", (chunk) => {
       raw += chunk;
-      if (raw.length > 1e6) {
+      if (raw.length > maxBodySize) {
         reject(new Error("Payload too large"));
         req.destroy();
       }
