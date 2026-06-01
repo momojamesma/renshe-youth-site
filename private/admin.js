@@ -131,19 +131,19 @@ function fillForm(data) {
   const donation = getSafeDonation(currentData);
   const appearance = currentData.organization?.appearance || {};
 
-  document.getElementById("organization-name-input").value = currentData.organization?.name ?? "";
+  document.getElementById("organization-name-input").value = currentData.organization.name ?? "";
   document.getElementById("organization-tagline-input").value =
-    currentData.organization?.tagline ?? "";
+    currentData.organization.tagline ?? "";
   document.getElementById("organization-mission-input").value =
-    currentData.organization?.mission ?? "";
-  document.getElementById("avatar-url-input").value = currentData.organization?.avatarUrl ?? "";
+    currentData.organization.mission ?? "";
+  document.getElementById("avatar-url-input").value = currentData.organization.avatarUrl ?? "";
   document.getElementById("brand-mark-text-input").value = appearance.brandMarkText ?? "RY";
-  document.getElementById("about-paragraph-1").value = currentData.organization?.about?.[0] ?? "";
-  document.getElementById("about-paragraph-2").value = currentData.organization?.about?.[1] ?? "";
-  document.getElementById("about-paragraph-3").value = currentData.organization?.about?.[2] ?? "";
-  document.getElementById("highlight-1").value = currentData.organization?.highlights?.[0] ?? "";
-  document.getElementById("highlight-2").value = currentData.organization?.highlights?.[1] ?? "";
-  document.getElementById("highlight-3").value = currentData.organization?.highlights?.[2] ?? "";
+  document.getElementById("about-paragraph-1").value = currentData.organization.about?.[0] ?? "";
+  document.getElementById("about-paragraph-2").value = currentData.organization.about?.[1] ?? "";
+  document.getElementById("about-paragraph-3").value = currentData.organization.about?.[2] ?? "";
+  document.getElementById("highlight-1").value = currentData.organization.highlights?.[0] ?? "";
+  document.getElementById("highlight-2").value = currentData.organization.highlights?.[1] ?? "";
+  document.getElementById("highlight-3").value = currentData.organization.highlights?.[2] ?? "";
 
   document.getElementById("donation-title-input").value = donation.title;
   document.getElementById("donation-raised-input").value = donation.raised;
@@ -222,6 +222,9 @@ async function fetchAdminSession() {
 
 async function fetchSiteData() {
   const response = await fetch("/api/site-data");
+  if (!response.ok) {
+    throw new Error("Site data fetch failed");
+  }
   return response.json();
 }
 
@@ -235,7 +238,10 @@ async function fetchAdminAccounts() {
 
 function getNextPublicationId() {
   return (
-    (currentData?.publications || []).reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1
+    (currentData?.publications || []).reduce(
+      (maxId, item) => Math.max(maxId, Number(item.id) || 0),
+      0
+    ) + 1
   );
 }
 
@@ -456,6 +462,7 @@ logoutButton.addEventListener("click", async () => {
   await fetch("/api/logout", { method: "POST" });
   showDashboard(false);
   loginForm.reset();
+  currentAdminUsername = "";
   loginMessage.textContent = "";
   saveMessage.textContent = "";
   adminMessage.textContent = "";

@@ -44,6 +44,10 @@ function renderContent(content) {
 async function loadPublication() {
   const publicationId = getPublicationId();
   const response = await fetch("/api/site-data");
+  if (!response.ok) {
+    throw new Error("Site data load failed");
+  }
+
   const data = await response.json();
   const publication = (data.publications || []).find((item) => Number(item.id) === publicationId);
 

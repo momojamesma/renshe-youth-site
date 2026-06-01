@@ -1,5 +1,4 @@
 const http = require("http");
-const https = require("https");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
@@ -12,10 +11,9 @@ const PRIVATE_DIR = path.join(__dirname, "private");
 const DATA_DIR = path.join(__dirname, "data");
 const SITE_DATA_PATH = path.join(DATA_DIR, "site-data.json");
 const ADMINS_PATH = path.join(DATA_DIR, "admins.json");
-const ADMIN_USER = process.env.ADMIN_USER || "admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "renshe2026";
 const ADMIN_ROUTE = "/manage-console";
-const PROTECTED_ADMIN_USERNAME = ADMIN_USER;
+const PRIMARY_ADMIN_USERNAME = "renshe_admin";
+const PRIMARY_ADMIN_PASSWORD = "RensheYouth!ed60806a73";
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 const ALLOW_TEST_ADMIN =
   process.env.ALLOW_TEST_ADMIN === "true" ||
@@ -53,10 +51,6 @@ function getAdminCredentialError(username, password) {
   return "";
 }
 
-function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 function decodeHtmlEntities(value) {
   return String(value || "")
     .replaceAll("&amp;", "&")
@@ -73,6 +67,10 @@ function normalizeWhitespace(value) {
   return String(value || "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function extractMetaContent(html, attribute, key) {
@@ -103,8 +101,6 @@ function extractMetaContent(html, attribute, key) {
 
 function fetchRemoteText(targetUrl) {
   return new Promise((resolve, reject) => {
-    const userAgent =
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36";
     const curlBinary = process.platform === "win32" ? "curl.exe" : "curl";
     const args = [
       "-L",
@@ -113,7 +109,7 @@ function fetchRemoteText(targetUrl) {
       "--max-time",
       "12",
       "-A",
-      userAgent,
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
       "-H",
       "Accept: text/html,application/xhtml+xml",
       "-H",
@@ -134,17 +130,21 @@ function fetchRemoteText(targetUrl) {
   });
 }
 
+async function fetchRemoteJson(targetUrl) {
+  const raw = await fetchRemoteText(targetUrl);
+  return JSON.parse(raw);
+}
+
 function validateInstagramPostUrl(input) {
   let parsedUrl;
   try {
     parsedUrl = new URL(input);
-  } catch (error) {
+  } catch {
     return null;
   }
 
   const hostname = parsedUrl.hostname.toLowerCase();
-  const allowedHosts = new Set(["instagram.com", "www.instagram.com"]);
-  if (!allowedHosts.has(hostname)) {
+  if (!["instagram.com", "www.instagram.com"].includes(hostname)) {
     return null;
   }
 
@@ -156,45 +156,49 @@ function validateInstagramPostUrl(input) {
   return `https://www.instagram.com/${parts[0]}/${parts[1]}/`;
 }
 
-function derivePublicationFromInstagram(url, html) {
+function derivePublicationFromInstagram(url, source) {
+  if (source && typeof source === "object" && typeof source.title === "string") {
+    const bodyText = normalizeWhitespace(source.title);
+    const authorText = source.author_name ? `作者：${source.author_name}` : "";
+    return {
+      title: bodyText.length > 34 ? `${bodyText.slice(0, 34).trim()}…` : bodyText,
+      tag: "Instagram",
+      description: bodyText.length > 96 ? `${bodyText.slice(0, 96).trim()}…` : bodyText,
+      content: [bodyText, authorText, `原始 Instagram 貼文網址：${url}`].filter(Boolean).join("\n\n")
+    };
+  }
+
+  const html = String(source || "");
   const ogTitle = extractMetaContent(html, "property", "og:title");
   const ogDescription =
     extractMetaContent(html, "property", "og:description") ||
     extractMetaContent(html, "name", "description");
   const pageTitleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   const pageTitle = decodeHtmlEntities(pageTitleMatch?.[1] || "");
-  const rawText = [ogTitle, ogDescription, pageTitle].find((item) => normalizeWhitespace(item)) || "";
+  const combinedText = [ogTitle, ogDescription, pageTitle]
+    .map(normalizeWhitespace)
+    .find(Boolean);
 
   let caption = "";
+  const quotedTitle = ogTitle.match(/on Instagram:\s*["“](.+?)["”]\s*$/i);
+  const quotedDescription = ogDescription.match(/["“](.+?)["”]/);
 
-  const titleCaptionMatch = ogTitle.match(/on Instagram:\s*["“](.+?)["”]\s*$/i);
-  if (titleCaptionMatch?.[1]) {
-    caption = titleCaptionMatch[1];
+  if (quotedTitle?.[1]) {
+    caption = quotedTitle[1];
+  } else if (quotedDescription?.[1]) {
+    caption = quotedDescription[1];
   }
 
-  if (!caption) {
-    const descriptionCaptionMatch = ogDescription.match(/["“](.+?)["”]/);
-    if (descriptionCaptionMatch?.[1]) {
-      caption = descriptionCaptionMatch[1];
-    }
-  }
-
-  caption = normalizeWhitespace(caption);
-  const fallbackText = normalizeWhitespace(rawText)
-    .replace(/\s*on Instagram:?\s*/i, " ")
-    .replace(/\s*•\s*Instagram.*$/i, "")
-    .trim();
-  const bodyText = caption || fallbackText || "此刊物由 Instagram 貼文匯入，請補充完整內容。";
-  const title = bodyText.length > 30 ? `${bodyText.slice(0, 30).trim()}…` : bodyText;
-  const description =
-    bodyText.length > 90 ? `${bodyText.slice(0, 90).trim()}…` : bodyText;
-  const content = `${bodyText}\n\n原始 Instagram 貼文網址：${url}`;
+  const bodyText =
+    normalizeWhitespace(caption) ||
+    combinedText ||
+    "此刊物由 Instagram 貼文匯入，請補充完整內容。";
 
   return {
-    title: title || "Instagram 貼文整理",
+    title: bodyText.length > 34 ? `${bodyText.slice(0, 34).trim()}…` : bodyText,
     tag: "Instagram",
-    description: description || "從 Instagram 貼文匯入的刊物草稿。",
-    content
+    description: bodyText.length > 96 ? `${bodyText.slice(0, 96).trim()}…` : bodyText,
+    content: `${bodyText}\n\n原始 Instagram 貼文網址：${url}`
   };
 }
 
@@ -213,10 +217,14 @@ function writeJsonFile(filePath, payload) {
 }
 
 function getSeedAdmins() {
-  const seedAdmins = [{ username: ADMIN_USER, password: ADMIN_PASSWORD }];
+  const seedAdmins = [
+    { username: PRIMARY_ADMIN_USERNAME, password: PRIMARY_ADMIN_PASSWORD }
+  ];
+
   if (ALLOW_TEST_ADMIN) {
     seedAdmins.push({ username: "test_admin", password: "youthhss2026" });
   }
+
   return seedAdmins;
 }
 
@@ -228,7 +236,7 @@ function normalizeAdminRecord(admin, fallbackCreatedAt = new Date().toISOString(
   };
 }
 
-function buildSeededAdmins(existingAdmins) {
+function mergeSeedAdmins(existingAdmins) {
   const adminMap = new Map(
     existingAdmins.map((admin) => [admin.username, normalizeAdminRecord(admin)])
   );
@@ -261,7 +269,7 @@ function createFileStore() {
       }
 
       const existingAdmins = fs.existsSync(ADMINS_PATH) ? readJsonFile(ADMINS_PATH) : [];
-      writeJsonFile(ADMINS_PATH, buildSeededAdmins(existingAdmins));
+      writeJsonFile(ADMINS_PATH, mergeSeedAdmins(existingAdmins));
     },
 
     async readSiteData() {
@@ -308,14 +316,16 @@ function createPostgresStore(connectionString) {
 
   async function syncSeedAdmins() {
     const result = await pool.query(
-      "SELECT username, password_hash AS \"passwordHash\", created_at AS \"createdAt\" FROM admin_accounts"
+      `SELECT username, password_hash AS "passwordHash", created_at AS "createdAt"
+       FROM admin_accounts
+       ORDER BY username ASC`
     );
-    const seededAdmins = buildSeededAdmins(result.rows);
+    const nextAdmins = mergeSeedAdmins(result.rows);
 
     await pool.query("BEGIN");
     try {
       await pool.query("DELETE FROM admin_accounts");
-      for (const admin of seededAdmins) {
+      for (const admin of nextAdmins) {
         await pool.query(
           `INSERT INTO admin_accounts (username, password_hash, created_at)
            VALUES ($1, $2, $3)`,
@@ -417,14 +427,6 @@ function sanitizeOrganizationInput(current, incoming) {
     return current;
   }
 
-  const nextAppearance =
-    incoming.appearance && typeof incoming.appearance === "object"
-      ? {
-          ...(current.appearance || {}),
-          ...incoming.appearance
-        }
-      : current.appearance;
-
   return {
     ...current,
     name: typeof incoming.name === "string" ? incoming.name : current.name,
@@ -433,7 +435,51 @@ function sanitizeOrganizationInput(current, incoming) {
     avatarUrl: typeof incoming.avatarUrl === "string" ? incoming.avatarUrl : current.avatarUrl,
     about: Array.isArray(incoming.about) ? incoming.about : current.about,
     highlights: Array.isArray(incoming.highlights) ? incoming.highlights : current.highlights,
-    appearance: nextAppearance
+    appearance:
+      incoming.appearance && typeof incoming.appearance === "object"
+        ? {
+            ...(current.appearance || {}),
+            ...incoming.appearance
+          }
+        : current.appearance
+  };
+}
+
+function sanitizeDonationInput(current, incoming) {
+  if (!incoming || typeof incoming !== "object") {
+    return current;
+  }
+
+  return {
+    ...current,
+    title: typeof incoming.title === "string" ? incoming.title : current.title,
+    summary: typeof incoming.summary === "string" ? incoming.summary : current.summary,
+    raised: Number.isFinite(Number(incoming.raised)) ? Number(incoming.raised) : current.raised,
+    target: Number.isFinite(Number(incoming.target)) ? Number(incoming.target) : current.target,
+    showTarget:
+      typeof incoming.showTarget === "boolean" ? incoming.showTarget : current.showTarget,
+    bankTransfer:
+      incoming.bankTransfer && typeof incoming.bankTransfer === "object"
+        ? {
+            ...(current.bankTransfer || {}),
+            bankName:
+              typeof incoming.bankTransfer.bankName === "string"
+                ? incoming.bankTransfer.bankName
+                : current.bankTransfer?.bankName,
+            accountName:
+              typeof incoming.bankTransfer.accountName === "string"
+                ? incoming.bankTransfer.accountName
+                : current.bankTransfer?.accountName,
+            accountNumber:
+              typeof incoming.bankTransfer.accountNumber === "string"
+                ? incoming.bankTransfer.accountNumber
+                : current.bankTransfer?.accountNumber,
+            note:
+              typeof incoming.bankTransfer.note === "string"
+                ? incoming.bankTransfer.note
+                : current.bankTransfer?.note
+          }
+        : current.bankTransfer
   };
 }
 
@@ -470,6 +516,7 @@ function sendText(res, statusCode, text, headers = {}) {
 function parseBody(req) {
   return new Promise((resolve, reject) => {
     let raw = "";
+
     req.on("data", (chunk) => {
       raw += chunk;
       if (raw.length > 1e6) {
@@ -477,17 +524,20 @@ function parseBody(req) {
         req.destroy();
       }
     });
+
     req.on("end", () => {
       if (!raw) {
         resolve({});
         return;
       }
+
       try {
         resolve(JSON.parse(raw));
       } catch (error) {
         reject(error);
       }
     });
+
     req.on("error", reject);
   });
 }
@@ -509,11 +559,13 @@ function getSession(req) {
   if (!cookies.sessionId) {
     return null;
   }
+
   const session = sessions.get(cookies.sessionId);
   if (!session || session.expiresAt < Date.now()) {
     sessions.delete(cookies.sessionId);
     return null;
   }
+
   return { id: cookies.sessionId, ...session };
 }
 
@@ -531,11 +583,13 @@ function serveStaticFile(filePath, res) {
     sendText(res, 403, "Forbidden");
     return;
   }
+
   fs.readFile(filePath, (error, content) => {
     if (error) {
       sendText(res, 404, "Not Found");
       return;
     }
+
     const ext = path.extname(filePath).toLowerCase();
     res.writeHead(200, {
       "Content-Type": MIME_TYPES[ext] || "application/octet-stream"
@@ -549,11 +603,13 @@ function servePrivateFile(filePath, res) {
     sendText(res, 403, "Forbidden");
     return;
   }
+
   fs.readFile(filePath, (error, content) => {
     if (error) {
       sendText(res, 404, "Not Found");
       return;
     }
+
     const ext = path.extname(filePath).toLowerCase();
     res.writeHead(200, {
       "Content-Type": MIME_TYPES[ext] || "application/octet-stream"
@@ -606,7 +662,7 @@ async function handleApi(req, res, pathname) {
         }
       );
       return true;
-    } catch (error) {
+    } catch {
       sendJson(res, 400, { error: "Unable to process login request." });
       return true;
     }
@@ -617,6 +673,7 @@ async function handleApi(req, res, pathname) {
     if (cookies.sessionId) {
       sessions.delete(cookies.sessionId);
     }
+
     sendJson(
       res,
       200,
@@ -632,6 +689,7 @@ async function handleApi(req, res, pathname) {
       sendJson(res, 401, { error: "Unauthorized" });
       return true;
     }
+
     sendJson(res, 200, { username: session.username, adminRoute: ADMIN_ROUTE });
     return true;
   }
@@ -682,7 +740,9 @@ async function handleApi(req, res, pathname) {
         createdAt: new Date().toISOString()
       });
 
-      await store.writeAdmins(admins);
+      await store.writeAdmins(
+        admins.sort((left, right) => left.username.localeCompare(right.username))
+      );
       sendJson(res, 201, {
         ok: true,
         admins: admins
@@ -693,7 +753,7 @@ async function handleApi(req, res, pathname) {
           .sort((left, right) => left.username.localeCompare(right.username))
       });
       return true;
-    } catch (error) {
+    } catch {
       sendJson(res, 400, { error: "Unable to create admin account." });
       return true;
     }
@@ -716,7 +776,7 @@ async function handleApi(req, res, pathname) {
       return true;
     }
 
-    if (username === PROTECTED_ADMIN_USERNAME) {
+    if (username === PRIMARY_ADMIN_USERNAME) {
       sendJson(res, 400, { error: "The primary admin account cannot be deleted." });
       return true;
     }
@@ -763,11 +823,21 @@ async function handleApi(req, res, pathname) {
         return true;
       }
 
-      const html = await fetchRemoteText(normalizedUrl);
-      const publication = derivePublicationFromInstagram(normalizedUrl, html);
+      let publication;
+      try {
+        const oembedUrl = `https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(
+          normalizedUrl
+        )}`;
+        const oembedData = await fetchRemoteJson(oembedUrl);
+        publication = derivePublicationFromInstagram(normalizedUrl, oembedData);
+      } catch {
+        const html = await fetchRemoteText(normalizedUrl);
+        publication = derivePublicationFromInstagram(normalizedUrl, html);
+      }
+
       sendJson(res, 200, { ok: true, publication });
       return true;
-    } catch (error) {
+    } catch {
       sendJson(res, 502, {
         error: "目前無法讀取這則 Instagram 貼文，請確認網址是否公開可見。"
       });
@@ -786,17 +856,14 @@ async function handleApi(req, res, pathname) {
       const nextData = {
         ...current,
         organization: sanitizeOrganizationInput(current.organization, body.organization),
-        donation: {
-          ...current.donation,
-          ...body.donation
-        },
+        donation: sanitizeDonationInput(current.donation, body.donation),
         publications: sanitizePublicationsInput(current.publications, body.publications)
       };
 
       await store.writeSiteData(nextData);
       sendJson(res, 200, nextData);
       return true;
-    } catch (error) {
+    } catch {
       sendJson(res, 400, { error: "Unable to update site data." });
       return true;
     }

@@ -160,10 +160,13 @@ function renderHeroStats(data) {
 
 async function loadSite() {
   const response = await fetch("/api/site-data");
+  if (!response.ok) {
+    throw new Error("Site data load failed");
+  }
+
   const data = await response.json();
 
   applyBranding(data.organization || {});
-
   document.getElementById("hero-title").textContent =
     data.organization?.tagline || "用學生的眼光看人社，用人社的視角看社會";
   document.getElementById("hero-mission").textContent = data.organization?.mission || "";
