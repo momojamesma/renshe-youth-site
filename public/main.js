@@ -265,6 +265,35 @@ function bindMobileMenu() {
   });
 }
 
+function bindScrollReset() {
+  const navigationEntry =
+    typeof performance !== "undefined" && typeof performance.getEntriesByType === "function"
+      ? performance.getEntriesByType("navigation")[0]
+      : null;
+  const navigationType = navigationEntry?.type || "";
+
+  if ("scrollRestoration" in history) {
+    history.scrollRestoration = "manual";
+  }
+
+  const shouldScrollToTop = navigationType === "reload" || !window.location.hash;
+  if (!shouldScrollToTop) {
+    return;
+  }
+
+  const resetScroll = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  };
+
+  window.addEventListener("load", () => {
+    resetScroll();
+    requestAnimationFrame(resetScroll);
+  });
+
+  window.addEventListener("pageshow", resetScroll);
+}
+
+bindScrollReset();
 bindMobileMenu();
 loadSite().catch(() => {
   document.getElementById("hero-mission").textContent = "目前無法載入網站資料，請稍後再試。";
