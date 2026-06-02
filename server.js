@@ -1019,18 +1019,19 @@ async function handleApi(req, res, pathname) {
 
       let html = "";
       let oembedData = null;
-      try {
-        const oembedUrl = `https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(
-          normalizedUrl
-        )}`;
-        oembedData = await fetchRemoteJson(oembedUrl);
-      } catch {
-        oembedData = null;
+      const oembedUrl = `https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(
+        normalizedUrl
+      )}`;
+      const [oembedResult, htmlResult] = await Promise.allSettled([
+        fetchRemoteJson(oembedUrl),
+        fetchRemoteText(normalizedUrl)
+      ]);
+
+      if (oembedResult.status === "fulfilled") {
+        oembedData = oembedResult.value;
       }
-      try {
-        html = await fetchRemoteText(normalizedUrl);
-      } catch {
-        html = "";
+      if (htmlResult.status === "fulfilled") {
+        html = htmlResult.value;
       }
       if (!html) {
         try {
