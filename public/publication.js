@@ -43,6 +43,32 @@ function sanitizeText(value, fallback = "") {
   return text;
 }
 
+function buildPublicationExcerpt(text, limit = 50) {
+  const normalized = String(text ?? "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (normalized.length <= limit) {
+    return normalized;
+  }
+
+  const punctuationMatch = normalized.slice(limit).match(/[。！？；.!?]/);
+  if (punctuationMatch && Number.isFinite(punctuationMatch.index)) {
+    const stopIndex = limit + punctuationMatch.index + 1;
+    if (stopIndex <= limit + 18) {
+      return `${normalized.slice(0, stopIndex).trim()}…`;
+    }
+  }
+
+  return `${normalized.slice(0, limit).trim()}…`;
+}
+
 function applyBranding(organization) {
   const avatar = document.getElementById("brand-avatar");
   const markText = document.getElementById("brand-mark-text");
@@ -105,14 +131,14 @@ async function loadPublication() {
   }
 
   const title = sanitizeText(publication.title, fallbackPublication.title);
-  const description = sanitizeText(publication.description, fallbackPublication.description);
   const tagText = sanitizeText(publication.tag, fallbackPublication.tag);
   const content = sanitizeText(publication.content, fallbackPublication.content);
   const orgName = sanitizeText(data.organization?.name, PUBLICATION_DEFAULTS.organization.name);
+  const excerpt = buildPublicationExcerpt(content);
 
   document.title = `${title} | ${orgName}`;
   document.getElementById("publication-title").textContent = title;
-  document.getElementById("publication-description").textContent = description;
+  document.getElementById("publication-description").textContent = excerpt;
 
   const tag = document.getElementById("publication-tag");
   if (tagText) {

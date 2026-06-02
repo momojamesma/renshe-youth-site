@@ -38,25 +38,51 @@ function escapeHtml(value) {
 }
 
 function sanitizeText(value, fallback = "") {
-  const text = String(value ?? "").replace(/\?+/g, "").trim();
+  const text = String(value ?? "").trim();
   return text || fallback;
-}
-
-function validateAdminCredentials(username, password) {
-  if (!ADMIN_USERNAME_RULE.test(username)) {
-    return "帳號只能使用英文、數字、底線或句點，長度需介於 1 到 30 字元。";
-  }
-
-  if (typeof password !== "string" || password.length < 8) {
-    return "密碼至少需要 8 個字元。";
-  }
-
-  return "";
 }
 
 function buildInstagramUrl(handle) {
   const normalizedHandle = String(handle || "").trim().replace(/^@+/, "");
   return normalizedHandle ? `https://www.instagram.com/${normalizedHandle}/` : "";
+}
+
+function buildPublicationExcerpt(text, limit = 50) {
+  const normalized = String(text ?? "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (normalized.length <= limit) {
+    return normalized;
+  }
+
+  const punctuationMatch = normalized.slice(limit).match(/[。！？；.!?]/);
+  if (punctuationMatch && Number.isFinite(punctuationMatch.index)) {
+    const stopIndex = limit + punctuationMatch.index + 1;
+    if (stopIndex <= limit + 18) {
+      return `${normalized.slice(0, stopIndex).trim()}…`;
+    }
+  }
+
+  return `${normalized.slice(0, limit).trim()}…`;
+}
+
+function validateAdminCredentials(username, password) {
+  if (!ADMIN_USERNAME_RULE.test(username)) {
+    return "帳號需為 1 到 30 字元，且只能使用英文、數字、底線或句點。";
+  }
+
+  if (typeof password !== "string" || password.length < 8) {
+    return "密碼至少需要 8 碼。";
+  }
+
+  return "";
 }
 
 function showDashboard(show) {
@@ -84,7 +110,7 @@ function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("無法讀取這個圖片檔案。"));
+    reader.onerror = () => reject(new Error("無法讀取圖片檔案。"));
     reader.readAsDataURL(file);
   });
 }
@@ -105,13 +131,11 @@ function createPublicationFields(item, index) {
         <input type="text" data-field="tag" data-id="${item.id}" value="${escapeHtml(item.tag)}" />
       </label>
       <label>
-        說明
-        <textarea rows="4" data-field="description" data-id="${item.id}" required>${escapeHtml(item.description)}</textarea>
-      </label>
-      <label>
         內文
         <textarea rows="10" data-field="content" data-id="${item.id}" required>${escapeHtml(item.content)}</textarea>
       </label>
+      <p class="caption">前台摘要會顯示約前 50 字，遇到斷句會優先在完整句子後結束。</p>
+      <p class="caption">目前摘要預覽：${escapeHtml(buildPublicationExcerpt(item.content) || "尚未產生摘要")}</p>
     </article>
   `;
 }
@@ -132,7 +156,7 @@ function renderAdminAccounts(admins) {
             <div>
               <h3>${escapeHtml(item.username)}</h3>
               <p class="caption">建立時間：${
-                item.createdAt ? new Date(item.createdAt).toLocaleString("zh-TW") : "未提供"
+                item.createdAt ? new Date(item.createdAt).toLocaleString("zh-TW") : "未知"
               }</p>
             </div>
             ${
@@ -215,6 +239,8 @@ function collectPublications() {
     publicationEditor.querySelectorAll(`[data-id="${item.id}"]`).forEach((field) => {
       updated[field.dataset.field] = field.value.trim();
     });
+
+    delete updated.description;
     return updated;
   });
 }
@@ -319,7 +345,7 @@ loginForm.addEventListener("submit", async (event) => {
 
   const result = await response.json();
   if (!response.ok) {
-    loginMessage.textContent = result.error || "登入失敗，請確認帳號密碼。";
+    loginMessage.textContent = result.error || "登入失敗，請確認帳號與密碼。";
     return;
   }
 
@@ -367,9 +393,8 @@ addPublicationButton.addEventListener("click", () => {
       ...(currentData.publications || []),
       {
         id: getNextPublicationId(),
-        title: "新刊物標題",
+        title: "請輸入刊物標題",
         tag: "",
-        description: "請輸入刊物說明。",
         content: "請輸入刊物內文。"
       }
     ]
@@ -429,7 +454,6 @@ importInstagramButton.addEventListener("click", async () => {
           id: getNextPublicationId(),
           title: result.publication.title,
           tag: result.publication.tag,
-          description: result.publication.description,
           content: result.publication.content
         }
       ]
@@ -437,7 +461,7 @@ importInstagramButton.addEventListener("click", async () => {
 
     renderPublications();
     urlInput.value = "";
-    publicationImportMessage.textContent = "Instagram 貼文已匯入成刊物草稿，記得再檢查內容後儲存。";
+    publicationImportMessage.textContent = "Instagram 貼文已匯入成刊物草稿，記得儲存網站內容。";
   } catch {
     publicationImportMessage.textContent = "Instagram 匯入失敗，請稍後再試。";
   } finally {
@@ -505,45 +529,43 @@ adminAccountList.addEventListener("click", async (event) => {
   adminMessage.textContent = "管理員已刪除。";
 });
 
-avatarFileInput.addEventListener("change", async (event) => {
-  const file = event.target.files?.[0];
-  avatarFileMessage.textContent = "";
+logoutButton.addEventListener("click", async () => {
+  await fetch("/api/logout", { method: "POST" });
+  showDashboard(false);
+  currentAdminUsername = "";
+  currentData = null;
+  loginForm.reset();
+});
 
+avatarFileInput.addEventListener("change", async (event) => {
+  avatarFileMessage.textContent = "";
+  const file = event.target.files?.[0];
   if (!file) {
     return;
   }
 
-  if (!file.type.startsWith("image/")) {
-    avatarFileMessage.textContent = "請選擇圖片檔案。";
-    avatarFileInput.value = "";
-    return;
-  }
-
   if (file.size > MAX_AVATAR_FILE_SIZE) {
-    avatarFileMessage.textContent = "圖片大小不能超過 1.5 MB。";
     avatarFileInput.value = "";
+    avatarFileMessage.textContent = "圖片檔案過大，請控制在 1.5 MB 以內。";
     return;
   }
 
   try {
     currentAvatarDataUrl = await readFileAsDataUrl(file);
     renderAvatarPreview();
-    avatarFileMessage.textContent = "頭像已載入，記得儲存網站內容。";
   } catch (error) {
-    avatarFileMessage.textContent = error.message || "讀取圖片失敗。";
+    avatarFileMessage.textContent = error.message;
   }
 });
 
 avatarClearButton.addEventListener("click", () => {
   currentAvatarDataUrl = "";
   avatarFileInput.value = "";
-  avatarFileMessage.textContent = "頭像已清除，記得儲存網站內容。";
+  avatarFileMessage.textContent = "";
   renderAvatarPreview();
 });
 
-brandMarkTextInput.addEventListener("input", () => {
-  renderAvatarPreview();
-});
+brandMarkTextInput.addEventListener("input", renderAvatarPreview);
 
 instagramHandleInput.addEventListener("blur", () => {
   if (!instagramUrlInput.value.trim()) {
@@ -551,26 +573,15 @@ instagramHandleInput.addEventListener("blur", () => {
   }
 });
 
-logoutButton.addEventListener("click", async () => {
-  await fetch("/api/logout", { method: "POST" });
-  showDashboard(false);
-  loginForm.reset();
-  currentAdminUsername = "";
-  currentAvatarDataUrl = "";
-  loginMessage.textContent = "";
-  saveMessage.textContent = "";
-  adminMessage.textContent = "";
-  avatarFileMessage.textContent = "";
-  publicationImportMessage.textContent = "";
-});
-
-Promise.all([fetchAdminSession(), fetchSiteData(), fetchAdminAccounts()])
-  .then(([session, siteData, accounts]) => {
+(async () => {
+  try {
+    const session = await fetchAdminSession();
     currentAdminUsername = session.username;
+    const [siteData, accounts] = await Promise.all([fetchSiteData(), fetchAdminAccounts()]);
     fillForm(siteData);
     renderAdminAccounts(accounts.admins);
     showDashboard(true);
-  })
-  .catch(() => {
+  } catch {
     showDashboard(false);
-  });
+  }
+})();

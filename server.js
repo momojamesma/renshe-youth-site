@@ -99,6 +99,34 @@ function normalizeLineBreaks(value) {
     .replace(/\r/g, "\n");
 }
 
+function buildPublicationExcerpt(text, limit = 50) {
+  const normalized = normalizeLineBreaks(text)
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) {
+    return "";
+  }
+
+  if (normalized.length <= limit) {
+    return normalized;
+  }
+
+  const punctuationMatch = normalized
+    .slice(limit)
+    .match(/[。！？；.!?]/);
+
+  if (punctuationMatch && Number.isFinite(punctuationMatch.index)) {
+    const stopIndex = limit + punctuationMatch.index + 1;
+    if (stopIndex <= limit + 18) {
+      return `${normalized.slice(0, stopIndex).trim()}…`;
+    }
+  }
+
+  return `${normalized.slice(0, limit).trim()}…`;
+}
+
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -403,7 +431,7 @@ function derivePublicationFromInstagram(url, source) {
     return {
       title: bodyText.length > 34 ? `${bodyText.slice(0, 34).trim()}…` : bodyText,
       tag: "Instagram",
-      description: bodyText.length > 96 ? `${bodyText.slice(0, 96).trim()}…` : bodyText,
+      description: buildPublicationExcerpt(bodyText),
       content: [bodyText, authorText, `原始 Instagram 貼文網址：${url}`].filter(Boolean).join("\n\n")
     };
   }
@@ -437,7 +465,7 @@ function derivePublicationFromInstagram(url, source) {
   return {
     title: bodyText.length > 34 ? `${bodyText.slice(0, 34).trim()}…` : bodyText,
     tag: "Instagram",
-    description: bodyText.length > 96 ? `${bodyText.slice(0, 96).trim()}…` : bodyText,
+    description: buildPublicationExcerpt(bodyText),
     content: `${bodyText}\n\n原始 Instagram 貼文網址：${url}`
   };
 }
@@ -605,7 +633,7 @@ function buildInstagramPublicationFromSources(url, html, oembedData = null) {
   return {
     title: buildPublicationTitle(caption),
     tag: buildPublicationTag(caption),
-    description: buildPublicationSummary(caption),
+    description: buildPublicationExcerpt(caption),
     content: `${caption}\n\n原始 Instagram 貼文網址：${url}`
   };
 }
@@ -922,13 +950,16 @@ function sanitizePublicationsInput(current, incoming) {
     return current;
   }
 
-  return incoming.map((item, index) => ({
-    id: Number.isFinite(Number(item.id)) ? Number(item.id) : Date.now() + index,
-    title: typeof item.title === "string" ? item.title : "",
-    description: typeof item.description === "string" ? item.description : "",
-    tag: typeof item.tag === "string" ? item.tag : "",
-    content: typeof item.content === "string" ? item.content : ""
-  }));
+  return incoming.map((item, index) => {
+    const content = typeof item.content === "string" ? item.content : "";
+    return {
+      id: Number.isFinite(Number(item.id)) ? Number(item.id) : Date.now() + index,
+      title: typeof item.title === "string" ? item.title : "",
+      description: buildPublicationExcerpt(content),
+      tag: typeof item.tag === "string" ? item.tag : "",
+      content
+    };
+  });
 }
 
 function sendJson(res, statusCode, payload, headers = {}) {
