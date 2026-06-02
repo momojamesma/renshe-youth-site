@@ -34,7 +34,7 @@ function renderHighlights(items) {
         <article>
           <p class="panel-label">Focus 0${index + 1}</p>
           <h3>${item}</h3>
-          <p>從青年視角切入人文社會議題，讓抽象概念變成能閱讀、能討論、也能參與的內容。</p>
+          <p>從青年視角整理議題脈絡，讓人文社會討論更容易被閱讀、分享與參與。</p>
         </article>
       `
     )
@@ -82,12 +82,12 @@ function renderDonation(donation) {
     targetAmount.textContent = `/ ${formatCurrency(target)}`;
     targetAmount.classList.remove("hidden");
     progressBar.style.width = `${progress}%`;
-    progressCaption.textContent = `目前已達成 ${Math.round(progress)}%`;
+    progressCaption.textContent = `已達成 ${Math.round(progress)}%`;
   } else {
     targetAmount.textContent = "";
     targetAmount.classList.add("hidden");
     progressBar.style.width = "100%";
-    progressCaption.textContent = "目前前台不顯示目標金額。";
+    progressCaption.textContent = "目前以前台顯示募得金額為主。";
   }
 
   const list = document.getElementById("donation-accounts");
@@ -134,6 +134,32 @@ function renderInstagram(instagram) {
   document.getElementById("ig-link").textContent = `${handle || "@instagram"} 前往 Instagram`;
 }
 
+async function refreshInstagramStats(instagram) {
+  if (!instagram) {
+    return;
+  }
+
+  const params = new URLSearchParams();
+  if (instagram.url) {
+    params.set("url", instagram.url);
+  } else if (instagram.handle) {
+    params.set("handle", instagram.handle);
+  }
+
+  const response = await fetch(`/api/instagram-profile?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("Instagram stats load failed");
+  }
+
+  const payload = await response.json();
+  if (payload?.instagram) {
+    renderInstagram({
+      ...instagram,
+      ...payload.instagram
+    });
+  }
+}
+
 function renderHeroStats(data) {
   const container = document.getElementById("hero-stats");
   const target = Number(data.donation?.target) || 0;
@@ -142,7 +168,7 @@ function renderHeroStats(data) {
     data.donation?.showTarget !== false && target > 0 ? Math.round((raised / target) * 100) : null;
 
   const stats = [
-    { value: `${data.organization?.themes?.length || 0}+`, label: "議題整理" },
+    { value: `${data.organization?.themes?.length || 0}+`, label: "關注議題" },
     { value: `${data.publications?.length || 0}`, label: "刊物篇數" },
     {
       value: progress === null ? formatCurrency(raised) : `${progress}%`,
@@ -182,6 +208,7 @@ async function loadSite() {
   renderPublications(data.publications || []);
   renderAbout(data.organization?.about || []);
   renderInstagram(data.organization?.instagram);
+  refreshInstagramStats(data.organization?.instagram).catch(() => {});
 }
 
 function bindMobileMenu() {
@@ -240,5 +267,5 @@ function bindMobileMenu() {
 
 bindMobileMenu();
 loadSite().catch(() => {
-  document.getElementById("hero-mission").textContent = "網站資料載入失敗，請稍後再試。";
+  document.getElementById("hero-mission").textContent = "目前無法載入網站資料，請稍後再試。";
 });

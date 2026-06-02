@@ -19,6 +19,7 @@ const ALLOW_TEST_ADMIN =
   (!IS_PRODUCTION && process.env.ALLOW_TEST_ADMIN !== "false");
 
 const sessions = new Map();
+const instagramProfileCache = new Map();
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -74,6 +75,8 @@ function getAdminCredentialError(username, password) {
 
 function decodeHtmlEntities(value) {
   return String(value || "")
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, decimal) => String.fromCodePoint(Number.parseInt(decimal, 10)))
     .replaceAll("&amp;", "&")
     .replaceAll("&quot;", '"')
     .replaceAll("&#39;", "'")
@@ -102,27 +105,50 @@ function escapeRegExp(value) {
 
 function extractMetaContent(html, attribute, key) {
   const source = String(html || "");
+  const headSlice = source.slice(0, 30000);
   const attributeMarkers = [
     `${attribute}="${key}"`,
     `${attribute}='${key}'`
   ];
 
   for (const marker of attributeMarkers) {
-    const markerIndex = source.indexOf(marker);
+    const markerIndex = headSlice.indexOf(marker);
     if (markerIndex < 0) {
       continue;
     }
 
-    const tagStart = source.lastIndexOf("<meta", markerIndex);
-    const tagEnd = source.indexOf(">", markerIndex);
+    const tagStart = headSlice.lastIndexOf("<meta", markerIndex);
+    const tagEnd = headSlice.indexOf(">", markerIndex);
     if (tagStart < 0 || tagEnd < 0) {
       continue;
     }
 
-    const tagText = source.slice(tagStart, tagEnd + 1);
+    const tagText = headSlice.slice(tagStart, tagEnd + 1);
     const contentMatch = tagText.match(/\bcontent=(["'])([\s\S]*?)\1/i);
     if (contentMatch?.[2]) {
       return decodeHtmlEntities(contentMatch[2]);
+    }
+  }
+
+  const escapedKey = escapeRegExp(key);
+  const fallbackPatterns = [
+    new RegExp(
+      `<meta[^>]+${attribute}=(["'])${escapedKey}\\1[^>]+content=(["'])([\\s\\S]*?)\\2[^>]*>`,
+      "i"
+    ),
+    new RegExp(
+      `<meta[^>]+content=(["'])([\\s\\S]*?)\\1[^>]+${attribute}=(["'])${escapedKey}\\3[^>]*>`,
+      "i"
+    )
+  ];
+
+  for (const pattern of fallbackPatterns) {
+    const match = headSlice.match(pattern);
+    if (match) {
+      const value = match[3] || match[2];
+      if (value) {
+        return decodeHtmlEntities(value);
+      }
     }
   }
 
@@ -193,6 +219,181 @@ function validateInstagramPostUrl(input) {
   }
 
   return `https://www.instagram.com/${parts[0]}/${parts[1]}/`;
+}
+
+function normalizeInstagramProfileReference(input) {
+  const raw = String(input || "").trim();
+  if (!raw) {
+    return null;
+  }
+
+  if (!raw.startsWith("http://") && !raw.startsWith("https://")) {
+    const handle = raw.replace(/^@+/, "").trim();
+    if (!handle) {
+      return null;
+    }
+    return {
+      handle,
+      url: `https://www.instagram.com/${handle}/`
+    };
+  }
+
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(raw);
+  } catch {
+    return null;
+  }
+
+  const hostname = parsedUrl.hostname.toLowerCase();
+  if (!["instagram.com", "www.instagram.com"].includes(hostname)) {
+    return null;
+  }
+
+  const parts = parsedUrl.pathname.split("/").filter(Boolean);
+  if (parts.length < 1) {
+    return null;
+  }
+
+  const handle = parts[0].replace(/^@+/, "").trim();
+  if (!handle || ["p", "reel", "tv", "explore", "accounts"].includes(handle.toLowerCase())) {
+    return null;
+  }
+
+  return {
+    handle,
+    url: `https://www.instagram.com/${handle}/`
+  };
+}
+
+function parseInstagramProfileCounts(description) {
+  const normalizedText = normalizeWhitespace(decodeHtmlEntities(description));
+  const safePatterns = {
+    followers: [
+      /([\d.,]+)\s*(?:\u4f4d)?\u7c89\u7d72/i,
+      /([\d.,]+)\s*followers?/i
+    ],
+    following: [
+      /([\d.,]+)\s*(?:\u4eba)?\u8ffd\u8e64\u4e2d/i,
+      /([\d.,]+)\s*following/i
+    ],
+    posts: [
+      /([\d.,]+)\s*(?:\u5247)?\u8cbc\u6587/i,
+      /([\d.,]+)\s*posts?/i
+    ]
+  };
+  const safeCounts = {};
+
+  for (const [key, matchers] of Object.entries(safePatterns)) {
+    for (const matcher of matchers) {
+      const match = normalizedText.match(matcher);
+      if (match?.[1]) {
+        safeCounts[key] = match[1];
+        break;
+      }
+    }
+  }
+
+  if (safeCounts.followers || safeCounts.following || safeCounts.posts) {
+    return safeCounts;
+  }
+
+  const text = normalizeWhitespace(decodeHtmlEntities(description));
+  const patterns = {
+    followers: [
+      /([\d.,]+)\s*(?:位)?粉絲/i,
+      /([\d.,]+)\s*followers?/i
+    ],
+    following: [
+      /([\d.,]+)\s*(?:人)?追蹤中/i,
+      /([\d.,]+)\s*following/i
+    ],
+    posts: [
+      /([\d.,]+)\s*(?:則)?貼文/i,
+      /([\d.,]+)\s*posts?/i
+    ]
+  };
+
+  const counts = {};
+  for (const [key, matchers] of Object.entries(patterns)) {
+    for (const matcher of matchers) {
+      const match = text.match(matcher);
+      if (match?.[1]) {
+        counts[key] = match[1];
+        break;
+      }
+    }
+  }
+
+  return counts;
+}
+
+function extractInstagramProfileDescription(html) {
+  const headSlice = String(html || "").slice(0, 30000);
+  const patterns = [
+    /<meta[^>]+property=(["'])og:description\1[^>]+content=(["'])([\s\S]*?)\2/i,
+    /<meta[^>]+content=(["'])([\s\S]*?)\1[^>]+property=(["'])og:description\3/i,
+    /<meta[^>]+name=(["'])description\1[^>]+content=(["'])([\s\S]*?)\2/i,
+    /<meta[^>]+content=(["'])([\s\S]*?)\1[^>]+name=(["'])description\3/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = headSlice.match(pattern);
+    const value = match?.[3] || match?.[2];
+    if (value) {
+      return decodeHtmlEntities(value);
+    }
+  }
+
+  return "";
+}
+
+async function fetchInstagramProfileStats(reference, fallback = {}) {
+  const normalized = normalizeInstagramProfileReference(reference);
+  if (!normalized) {
+    throw new Error("Invalid Instagram profile reference.");
+  }
+
+  const cacheKey = normalized.handle.toLowerCase();
+  const cached = instagramProfileCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  const response = await fetch(normalized.url, {
+    method: "GET",
+    redirect: "follow",
+    signal: AbortSignal.timeout(8000),
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+      Accept: "text/html,application/xhtml+xml",
+      "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
+      "Cache-Control": "no-cache"
+    }
+  });
+  if (!response.ok) {
+    throw new Error(`Instagram profile request failed with status ${response.status}.`);
+  }
+  const html = await response.text();
+  const description = extractInstagramProfileDescription(html);
+  const counts = parseInstagramProfileCounts(description);
+
+  const value = {
+    handle: `@${normalized.handle}`,
+    url: normalized.url,
+    followers: counts.followers || fallback.followers || "-",
+    posts: counts.posts || fallback.posts || "-",
+    following: counts.following || fallback.following || "-",
+    live: Boolean(counts.followers || counts.posts || counts.following)
+  };
+
+  instagramProfileCache.set(cacheKey, {
+    value,
+    expiresAt: Date.now() + 1000 * 60 * 10
+  });
+
+  return value;
 }
 
 function derivePublicationFromInstagram(url, source) {
@@ -865,6 +1066,34 @@ async function handleApi(req, res, pathname) {
   if (pathname === "/api/site-data" && req.method === "GET") {
     sendJson(res, 200, await store.readSiteData());
     return true;
+  }
+
+  if (pathname === "/api/instagram-profile" && req.method === "GET") {
+    const siteData = await store.readSiteData();
+    const fallbackInstagram = siteData.organization?.instagram || {};
+    const requestedReference = new URL(req.url, `http://${req.headers.host}`).searchParams.get("url")
+      || new URL(req.url, `http://${req.headers.host}`).searchParams.get("handle")
+      || fallbackInstagram.url
+      || fallbackInstagram.handle;
+
+    try {
+      const instagram = await fetchInstagramProfileStats(requestedReference, fallbackInstagram);
+      sendJson(res, 200, { ok: true, instagram });
+      return true;
+    } catch {
+      sendJson(res, 200, {
+        ok: true,
+        instagram: {
+          handle: fallbackInstagram.handle || "@instagram",
+          url: fallbackInstagram.url || "#",
+          followers: fallbackInstagram.followers || "-",
+          posts: fallbackInstagram.posts || "-",
+          following: fallbackInstagram.following || "-",
+          live: false
+        }
+      });
+      return true;
+    }
   }
 
   if (pathname === "/api/login" && req.method === "POST") {
