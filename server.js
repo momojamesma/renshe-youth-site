@@ -127,7 +127,17 @@ function extractMetaContent(html, attribute, key) {
   return "";
 }
 
-function fetchRemoteText(targetUrl) {
+function fetchRemoteText(targetUrl, options = {}) {
+  const timeoutSeconds =
+    Number.isFinite(options.timeoutSeconds) && options.timeoutSeconds > 0
+      ? String(options.timeoutSeconds)
+      : "12";
+  const acceptHeader =
+    typeof options.acceptHeader === "string" && options.acceptHeader.trim()
+      ? options.acceptHeader.trim()
+      : "text/html,application/xhtml+xml";
+  const execTimeoutMs = Math.max(Number.parseInt(timeoutSeconds, 10) * 1000 + 500, 1500);
+
   return new Promise((resolve, reject) => {
     const curlBinary = process.platform === "win32" ? "curl.exe" : "curl";
     const args = [
@@ -135,11 +145,11 @@ function fetchRemoteText(targetUrl) {
       "--silent",
       "--show-error",
       "--max-time",
-      "12",
+      timeoutSeconds,
       "-A",
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
       "-H",
-      "Accept: text/html,application/xhtml+xml",
+      `Accept: ${acceptHeader}`,
       "-H",
       "Accept-Language: zh-TW,zh;q=0.9,en;q=0.8",
       "-H",
@@ -147,19 +157,27 @@ function fetchRemoteText(targetUrl) {
       targetUrl
     ];
 
-    execFile(curlBinary, args, { maxBuffer: 8 * 1024 * 1024 }, (error, stdout, stderr) => {
-      if (error) {
-        reject(new Error(stderr || error.message || "Remote request failed."));
-        return;
-      }
+    execFile(
+      curlBinary,
+      args,
+      { maxBuffer: 8 * 1024 * 1024, timeout: execTimeoutMs, windowsHide: true },
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(new Error(stderr || error.message || "Remote request failed."));
+          return;
+        }
 
-      resolve(stdout);
-    });
+        resolve(stdout);
+      }
+    );
   });
 }
 
-async function fetchRemoteJson(targetUrl) {
-  const raw = await fetchRemoteText(targetUrl);
+async function fetchRemoteJson(targetUrl, options = {}) {
+  const raw = await fetchRemoteText(targetUrl, {
+    ...options,
+    acceptHeader: "application/json,text/plain,*/*"
+  });
   return JSON.parse(raw);
 }
 
@@ -1022,24 +1040,20 @@ async function handleApi(req, res, pathname) {
       const oembedUrl = `https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(
         normalizedUrl
       )}`;
-      const [oembedResult, htmlResult] = await Promise.allSettled([
-        fetchRemoteJson(oembedUrl),
-        fetchRemoteText(normalizedUrl)
+      const [oembedResult, htmlResult, embedResult] = await Promise.allSettled([
+        fetchRemoteJson(oembedUrl, { timeoutSeconds: 3 }),
+        fetchRemoteText(normalizedUrl, { timeoutSeconds: 3 }),
+        fetchRemoteText(`${normalizedUrl}embed/captioned/`, { timeoutSeconds: 3 })
       ]);
 
       if (oembedResult.status === "fulfilled") {
         oembedData = oembedResult.value;
       }
-      if (htmlResult.status === "fulfilled") {
-        html = htmlResult.value;
-      }
-      if (!html) {
-        try {
-          html = await fetchRemoteText(`${normalizedUrl}embed/captioned/`);
-        } catch {
-          html = "";
-        }
-      }
+      const htmlCandidates = [htmlResult, embedResult]
+        .filter((result) => result.status === "fulfilled")
+        .map((result) => result.value)
+        .filter((value) => typeof value === "string" && value.trim());
+      html = htmlCandidates.sort((left, right) => right.length - left.length)[0] || "";
       if (!html && !oembedData) {
         sendJson(res, 422, {
           error: "目前無法讀取這則 Instagram 貼文，請確認網址是否公開可見。"
