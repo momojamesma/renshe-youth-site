@@ -33,12 +33,15 @@ function getPublicationId() {
 
 function renderContent(content) {
   const container = document.getElementById("publication-content");
-  const paragraphs = String(content || "")
+  const blocks = String(content || "")
+    .replace(/\r\n/g, "\n")
     .split(/\n{2,}/)
     .map((text) => text.trim())
     .filter(Boolean);
 
-  container.innerHTML = paragraphs.map((text) => `<p>${escapeHtml(text)}</p>`).join("");
+  container.innerHTML = blocks
+    .map((text) => `<p>${escapeHtml(text).replace(/\n/g, "<br />")}</p>`)
+    .join("");
 }
 
 async function loadPublication() {
@@ -56,8 +59,7 @@ async function loadPublication() {
   if (!publication) {
     document.getElementById("publication-title").textContent = "找不到這篇刊物";
     document.getElementById("publication-tag").classList.add("hidden");
-    document.getElementById("publication-description").textContent =
-      "這篇內容可能已被移除，或網址有誤。";
+    document.getElementById("publication-description").textContent = "刊物可能已被移除，請返回列表重新查看。";
     document.getElementById("publication-content").innerHTML = "";
     return;
   }

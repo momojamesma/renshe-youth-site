@@ -1017,6 +1017,10 @@ footer[id] {
   gap: 16px;
 }
 
+.admin-grid-span-2 {
+  grid-column: span 2;
+}
+
 .admin-grid-branding {
   align-items: start;
 }
@@ -1139,6 +1143,10 @@ textarea {
   .editor-toolbar,
   .inline-input-group {
     grid-template-columns: 1fr;
+  }
+
+  .admin-grid-span-2 {
+    grid-column: auto;
   }
 
   .mobile-menu-toggle {

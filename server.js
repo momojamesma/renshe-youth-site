@@ -34,6 +34,28 @@ const MIME_TYPES = {
 };
 
 const ADMIN_USERNAME_RULE = /^[A-Za-z0-9._]{1,30}$/;
+const KEYWORD_HINTS = [
+  "社會建構",
+  "公共參與",
+  "轉型正義",
+  "自由主義",
+  "自我審查",
+  "霸權",
+  "特權",
+  "性別",
+  "身分認同",
+  "教育",
+  "勞動",
+  "民主",
+  "社會學",
+  "歷史",
+  "文化",
+  "人權",
+  "青年",
+  "政治",
+  "媒體",
+  "犯罪"
+];
 
 function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
@@ -67,6 +89,12 @@ function normalizeWhitespace(value) {
   return String(value || "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function normalizeLineBreaks(value) {
+  return String(value || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
 }
 
 function escapeRegExp(value) {
@@ -199,6 +227,145 @@ function derivePublicationFromInstagram(url, source) {
     tag: "Instagram",
     description: bodyText.length > 96 ? `${bodyText.slice(0, 96).trim()}…` : bodyText,
     content: `${bodyText}\n\n原始 Instagram 貼文網址：${url}`
+  };
+}
+
+function decodeJsonLikeText(value) {
+  return decodeHtmlEntities(
+    normalizeLineBreaks(String(value || ""))
+      .replace(/\\u003C/g, "<")
+      .replace(/\\u003E/g, ">")
+      .replace(/\\u0026/g, "&")
+      .replace(/\\u2019/g, "’")
+      .replace(/\\u201c/g, "“")
+      .replace(/\\u201d/g, "”")
+      .replace(/\\n/g, "\n")
+      .replace(/\\r/g, "\n")
+      .replace(/\\"/g, '"')
+      .replace(/\\\//g, "/")
+      .replace(/\\\\/g, "\\")
+  );
+}
+
+function extractInstagramCaptionFromHtml(html) {
+  const textPatterns = [
+    /"edge_media_to_caption"\s*:\s*\{"edges":\[\{"node":\{"text":"((?:\\.|[^"\\])*)"/i,
+    /"caption"\s*:\s*"((?:\\.|[^"\\])*)"/i,
+    /"articleBody"\s*:\s*"((?:\\.|[^"\\])*)"/i
+  ];
+  const candidates = [];
+
+  for (const pattern of textPatterns) {
+    const match = String(html || "").match(pattern);
+    if (match?.[1]) {
+      const decoded = decodeJsonLikeText(match[1]).trim();
+      if (decoded) {
+        candidates.push(decoded);
+      }
+    }
+  }
+
+  const ogDescription =
+    extractMetaContent(html, "property", "og:description") ||
+    extractMetaContent(html, "name", "description");
+  const quotedDescription = ogDescription.match(/["“](.+?)["”]/);
+
+  if (quotedDescription?.[1]) {
+    candidates.push(normalizeLineBreaks(quotedDescription[1]).trim());
+  } else if (ogDescription) {
+    candidates.push(normalizeLineBreaks(ogDescription).trim());
+  }
+
+  return candidates.sort((left, right) => right.length - left.length)[0] || "";
+}
+
+function buildPublicationTitle(text) {
+  const candidate =
+    normalizeLineBreaks(text)
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => line && !/^#/.test(line) && !/^原始 Instagram 貼文網址：/.test(line)) || "";
+  const compact = normalizeWhitespace(candidate);
+  return compact ? (compact.length > 34 ? `${compact.slice(0, 34).trim()}…` : compact) : "Instagram 匯入刊物";
+}
+
+function buildPublicationSummary(text) {
+  const compact = normalizeWhitespace(
+    normalizeLineBreaks(text)
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line && !/^#/.test(line))
+      .join(" ")
+  );
+
+  if (!compact) {
+    return "此刊物由 Instagram 貼文匯入。";
+  }
+
+  const sentence = compact.match(/^.{1,120}?[。！？!?]/);
+  if (sentence?.[0]) {
+    return sentence[0];
+  }
+
+  return compact.length > 110 ? `${compact.slice(0, 110).trim()}…` : compact;
+}
+
+function extractHashtags(text) {
+  const matches = Array.from(String(text || "").matchAll(/(^|\s)#([^\s#]+)/g));
+  return Array.from(new Set(matches.map((match) => match[2].trim()).filter(Boolean)));
+}
+
+function extractKeywordNgrams(text) {
+  const counts = new Map();
+  const sequences = String(text || "").match(/[\u4e00-\u9fff]{2,}/g) || [];
+  const stopPhrases = new Set(["我們", "你們", "他們", "這個", "一個", "不是", "可以", "如果", "因為", "所以"]);
+
+  for (const sequence of sequences) {
+    for (let size = 2; size <= 4; size += 1) {
+      for (let index = 0; index <= sequence.length - size; index += 1) {
+        const token = sequence.slice(index, index + size);
+        if (stopPhrases.has(token) || /^([一-龥])\1+$/.test(token)) {
+          continue;
+        }
+        counts.set(token, (counts.get(token) || 0) + 1);
+      }
+    }
+  }
+
+  return Array.from(counts.entries())
+    .filter(([, count]) => count >= 2)
+    .sort((left, right) => (right[1] * right[0].length) - (left[1] * left[0].length))
+    .map(([token]) => token);
+}
+
+function buildPublicationTag(text) {
+  const hashtagTags = extractHashtags(text).slice(0, 3);
+  if (hashtagTags.length > 0) {
+    return hashtagTags.join(" / ");
+  }
+
+  const hinted = KEYWORD_HINTS.filter((keyword) => String(text || "").includes(keyword)).slice(0, 3);
+  if (hinted.length > 0) {
+    return hinted.join(" / ");
+  }
+
+  const ngramTags = extractKeywordNgrams(text).slice(0, 3);
+  return ngramTags.length > 0 ? ngramTags.join(" / ") : "Instagram";
+}
+
+function buildInstagramPublicationFromSources(url, html, oembedData = null) {
+  const extractedCaption = extractInstagramCaptionFromHtml(html);
+  const fallbackCaption =
+    oembedData && typeof oembedData.title === "string"
+      ? normalizeLineBreaks(oembedData.title).trim()
+      : "";
+  const caption = extractedCaption || fallbackCaption || "此刊物由 Instagram 貼文匯入，請補充完整內容。";
+
+  return {
+    title: buildPublicationTitle(caption),
+    tag: buildPublicationTag(caption),
+    description: buildPublicationSummary(caption),
+    content: `${caption}\n\n原始 Instagram 貼文網址：${url}`
   };
 }
 
@@ -433,6 +600,32 @@ function sanitizeOrganizationInput(current, incoming) {
     tagline: typeof incoming.tagline === "string" ? incoming.tagline : current.tagline,
     mission: typeof incoming.mission === "string" ? incoming.mission : current.mission,
     avatarUrl: typeof incoming.avatarUrl === "string" ? incoming.avatarUrl : current.avatarUrl,
+    instagram:
+      incoming.instagram && typeof incoming.instagram === "object"
+        ? {
+            ...(current.instagram || {}),
+            handle:
+              typeof incoming.instagram.handle === "string"
+                ? incoming.instagram.handle
+                : current.instagram?.handle,
+            url:
+              typeof incoming.instagram.url === "string"
+                ? incoming.instagram.url
+                : current.instagram?.url,
+            followers:
+              typeof incoming.instagram.followers === "string"
+                ? incoming.instagram.followers
+                : current.instagram?.followers,
+            posts:
+              typeof incoming.instagram.posts === "string"
+                ? incoming.instagram.posts
+                : current.instagram?.posts,
+            following:
+              typeof incoming.instagram.following === "string"
+                ? incoming.instagram.following
+                : current.instagram?.following
+          }
+        : current.instagram,
     about: Array.isArray(incoming.about) ? incoming.about : current.about,
     highlights: Array.isArray(incoming.highlights) ? incoming.highlights : current.highlights,
     appearance:
@@ -824,18 +1017,18 @@ async function handleApi(req, res, pathname) {
         return true;
       }
 
-      let publication;
+      const html = await fetchRemoteText(normalizedUrl);
+      let oembedData = null;
       try {
         const oembedUrl = `https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(
           normalizedUrl
         )}`;
-        const oembedData = await fetchRemoteJson(oembedUrl);
-        publication = derivePublicationFromInstagram(normalizedUrl, oembedData);
+        oembedData = await fetchRemoteJson(oembedUrl);
       } catch {
-        const html = await fetchRemoteText(normalizedUrl);
-        publication = derivePublicationFromInstagram(normalizedUrl, html);
+        oembedData = null;
       }
 
+      const publication = buildInstagramPublicationFromSources(normalizedUrl, html, oembedData);
       sendJson(res, 200, { ok: true, publication });
       return true;
     } catch {

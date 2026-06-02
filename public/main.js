@@ -34,7 +34,7 @@ function renderHighlights(items) {
         <article>
           <p class="panel-label">Focus 0${index + 1}</p>
           <h3>${item}</h3>
-          <p>從學生能理解的角度切入，把抽象的人文社會議題整理成可閱讀、可對話、可參與的公共內容。</p>
+          <p>從青年視角切入人文社會議題，讓抽象概念變成能閱讀、能討論、也能參與的內容。</p>
         </article>
       `
     )
@@ -87,7 +87,7 @@ function renderDonation(donation) {
     targetAmount.textContent = "";
     targetAmount.classList.add("hidden");
     progressBar.style.width = "100%";
-    progressCaption.textContent = "目前僅顯示已募得金額";
+    progressCaption.textContent = "目前前台不顯示目標金額。";
   }
 
   const list = document.getElementById("donation-accounts");
@@ -123,11 +123,15 @@ function renderInstagram(instagram) {
     return;
   }
 
-  document.getElementById("ig-followers").textContent = instagram.followers;
-  document.getElementById("ig-posts").textContent = instagram.posts;
-  document.getElementById("ig-following").textContent = instagram.following;
-  document.getElementById("ig-link").href = instagram.url;
-  document.getElementById("ig-link").textContent = `${instagram.handle} 前往 Instagram`;
+  const handle = String(instagram.handle || "").trim();
+  const normalizedHandle = handle.replace(/^@+/, "");
+  const profileUrl = instagram.url || (normalizedHandle ? `https://www.instagram.com/${normalizedHandle}/` : "#");
+
+  document.getElementById("ig-followers").textContent = instagram.followers || "-";
+  document.getElementById("ig-posts").textContent = instagram.posts || "-";
+  document.getElementById("ig-following").textContent = instagram.following || "-";
+  document.getElementById("ig-link").href = profileUrl;
+  document.getElementById("ig-link").textContent = `${handle || "@instagram"} 前往 Instagram`;
 }
 
 function renderHeroStats(data) {
@@ -138,8 +142,8 @@ function renderHeroStats(data) {
     data.donation?.showTarget !== false && target > 0 ? Math.round((raised / target) * 100) : null;
 
   const stats = [
-    { value: `${data.organization?.themes?.length || 0}+`, label: "核心議題" },
-    { value: `${data.publications?.length || 0}`, label: "刊物整理" },
+    { value: `${data.organization?.themes?.length || 0}+`, label: "議題整理" },
+    { value: `${data.publications?.length || 0}`, label: "刊物篇數" },
     {
       value: progress === null ? formatCurrency(raised) : `${progress}%`,
       label: progress === null ? "目前募得" : "募款進度"

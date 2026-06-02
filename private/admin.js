@@ -17,6 +17,9 @@ const avatarClearButton = document.getElementById("avatar-clear-button");
 const avatarPreview = document.getElementById("avatar-preview");
 const avatarPreviewFallback = document.getElementById("avatar-preview-fallback");
 const avatarFileMessage = document.getElementById("avatar-file-message");
+const brandMarkTextInput = document.getElementById("brand-mark-text-input");
+const instagramHandleInput = document.getElementById("instagram-handle-input");
+const instagramUrlInput = document.getElementById("instagram-url-input");
 
 const ADMIN_USERNAME_RULE = /^[A-Za-z0-9._]{1,30}$/;
 const PROTECTED_ADMIN_USERNAME = "renshe_admin";
@@ -46,13 +49,18 @@ function validateAdminCredentials(username, password) {
   return "";
 }
 
+function buildInstagramUrl(handle) {
+  const normalizedHandle = String(handle || "").trim().replace(/^@+/, "");
+  return normalizedHandle ? `https://www.instagram.com/${normalizedHandle}/` : "";
+}
+
 function showDashboard(show) {
   loginView.classList.toggle("hidden", show);
   dashboardView.classList.toggle("hidden", !show);
 }
 
 function renderAvatarPreview() {
-  const fallbackText = document.getElementById("brand-mark-text-input").value.trim() || "RY";
+  const fallbackText = brandMarkTextInput.value.trim() || "RY";
   avatarPreviewFallback.textContent = fallbackText;
 
   if (currentAvatarDataUrl) {
@@ -162,15 +170,18 @@ function fillForm(data) {
 
   const donation = getSafeDonation(currentData);
   const appearance = currentData.organization?.appearance || {};
+  const instagram = currentData.organization?.instagram || {};
 
   document.getElementById("organization-name-input").value = currentData.organization.name ?? "";
   document.getElementById("organization-tagline-input").value =
     currentData.organization.tagline ?? "";
   document.getElementById("organization-mission-input").value =
     currentData.organization.mission ?? "";
+  instagramHandleInput.value = instagram.handle ?? "";
+  instagramUrlInput.value = instagram.url ?? "";
   currentAvatarDataUrl = currentData.organization.avatarUrl ?? "";
   avatarFileInput.value = "";
-  document.getElementById("brand-mark-text-input").value = appearance.brandMarkText ?? "RY";
+  brandMarkTextInput.value = appearance.brandMarkText ?? "RY";
   document.getElementById("about-paragraph-1").value = currentData.organization.about?.[0] ?? "";
   document.getElementById("about-paragraph-2").value = currentData.organization.about?.[1] ?? "";
   document.getElementById("about-paragraph-3").value = currentData.organization.about?.[2] ?? "";
@@ -207,15 +218,23 @@ function collectPublications() {
 }
 
 function collectOrganization() {
+  const handle = instagramHandleInput.value.trim();
+  const url = instagramUrlInput.value.trim() || buildInstagramUrl(handle);
+
   return {
     ...(currentData.organization || {}),
     name: document.getElementById("organization-name-input").value.trim(),
     tagline: document.getElementById("organization-tagline-input").value.trim(),
     mission: document.getElementById("organization-mission-input").value.trim(),
     avatarUrl: currentAvatarDataUrl,
+    instagram: {
+      ...(currentData.organization?.instagram || {}),
+      handle,
+      url
+    },
     appearance: {
       ...(currentData.organization?.appearance || {}),
-      brandMarkText: document.getElementById("brand-mark-text-input").value.trim() || "RY"
+      brandMarkText: brandMarkTextInput.value.trim() || "RY"
     },
     about: [
       document.getElementById("about-paragraph-1").value.trim(),
@@ -529,8 +548,14 @@ avatarClearButton.addEventListener("click", () => {
   renderAvatarPreview();
 });
 
-document.getElementById("brand-mark-text-input").addEventListener("input", () => {
+brandMarkTextInput.addEventListener("input", () => {
   renderAvatarPreview();
+});
+
+instagramHandleInput.addEventListener("blur", () => {
+  if (!instagramUrlInput.value.trim()) {
+    instagramUrlInput.value = buildInstagramUrl(instagramHandleInput.value);
+  }
 });
 
 logoutButton.addEventListener("click", async () => {

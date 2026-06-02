@@ -38,7 +38,7 @@
         <form id="dashboard-form" class="stack-form">
           <div class="section-heading compact">
             <h2>組織資訊</h2>
-            <p class="caption">可調整網站名稱、首頁主標、使命文字與品牌頭像。</p>
+            <p class="caption">可調整網站名稱、首頁主標、使命文字、品牌頭像與 Instagram 資訊。</p>
           </div>
 
           <div class="admin-grid">
@@ -52,7 +52,22 @@
             </label>
             <label>
               Instagram 帳號
-              <input value="@youth.hss" type="text" disabled />
+              <input id="instagram-handle-input" type="text" placeholder="@youth.hss" />
+            </label>
+          </div>
+
+          <div class="admin-grid">
+            <label class="admin-grid-span-2">
+              Instagram 網址
+              <input
+                id="instagram-url-input"
+                type="url"
+                placeholder="https://www.instagram.com/youth.hss/"
+              />
+            </label>
+            <label>
+              品牌縮寫
+              <input id="brand-mark-text-input" type="text" maxlength="4" placeholder="RY" />
             </label>
           </div>
 
@@ -62,14 +77,14 @@
           </label>
 
           <div class="admin-grid admin-grid-branding">
-            <label class="file-upload-field">
+            <label class="file-upload-field admin-grid-span-2">
               頭像圖片檔案
-              <input id="avatar-file-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
+              <input
+                id="avatar-file-input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+              />
               <span class="caption">支援 PNG、JPG、WEBP、GIF，建議 1.5 MB 以內。</span>
-            </label>
-            <label>
-              品牌縮寫
-              <input id="brand-mark-text-input" type="text" maxlength="4" placeholder="RY" />
             </label>
             <div class="button-column avatar-preview-panel">
               <div class="avatar-preview-card">
@@ -195,7 +210,9 @@
                   匯入為刊物
                 </button>
               </div>
-              <p class="caption">匯入後會先建立刊物草稿，你仍可再修改標題、說明與內文。</p>
+              <p class="caption">
+                系統會保留原貼文換行，自動產出摘要與關鍵詞標籤，再建立成刊物草稿。
+              </p>
               <p id="publication-import-message" class="message compact"></p>
             </div>
           </div>
