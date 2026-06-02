@@ -6,13 +6,18 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
+function sanitizeText(value, fallback = "") {
+  const text = String(value ?? "").replace(/\?+/g, "").trim();
+  return text || fallback;
+}
+
 function applyBranding(organization) {
   const avatar = document.getElementById("brand-avatar");
   const markText = document.getElementById("brand-mark-text");
   const brandName = document.getElementById("brand-name");
-  const brandMarkText = organization?.appearance?.brandMarkText?.trim() || "RY";
+  const brandMarkText = sanitizeText(organization?.appearance?.brandMarkText, "RY");
 
-  brandName.textContent = organization?.name || "人社青年";
+  brandName.textContent = sanitizeText(organization?.name, "人社青年");
   markText.textContent = brandMarkText;
 
   if (organization?.avatarUrl) {
@@ -59,18 +64,18 @@ async function loadPublication() {
   if (!publication) {
     document.getElementById("publication-title").textContent = "找不到這篇刊物";
     document.getElementById("publication-tag").classList.add("hidden");
-    document.getElementById("publication-description").textContent = "刊物可能已被移除，請返回列表重新查看。";
+    document.getElementById("publication-description").textContent = "這篇刊物可能已被移除，或網址不正確。";
     document.getElementById("publication-content").innerHTML = "";
     return;
   }
 
-  document.title = `${publication.title} | ${data.organization?.name || "人社青年"}`;
-  document.getElementById("publication-title").textContent = publication.title;
-  document.getElementById("publication-description").textContent = publication.description || "";
+  document.title = `${sanitizeText(publication.title, "刊物內容")} | ${sanitizeText(data.organization?.name, "人社青年")}`;
+  document.getElementById("publication-title").textContent = sanitizeText(publication.title, "未命名刊物");
+  document.getElementById("publication-description").textContent = sanitizeText(publication.description);
 
   const tag = document.getElementById("publication-tag");
   if (publication.tag) {
-    tag.textContent = publication.tag;
+    tag.textContent = sanitizeText(publication.tag);
     tag.classList.remove("hidden");
   } else {
     tag.classList.add("hidden");
@@ -80,6 +85,6 @@ async function loadPublication() {
 }
 
 loadPublication().catch(() => {
-  document.getElementById("publication-title").textContent = "刊物資料載入失敗";
+  document.getElementById("publication-title").textContent = "刊物載入失敗";
   document.getElementById("publication-description").textContent = "請稍後再試。";
 });

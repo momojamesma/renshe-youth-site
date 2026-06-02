@@ -6,13 +6,18 @@ function formatCurrency(value) {
   }).format(Number(value) || 0);
 }
 
+function sanitizeText(value, fallback = "") {
+  const text = String(value ?? "").replace(/\?+/g, "").trim();
+  return text || fallback;
+}
+
 function applyBranding(organization) {
   const avatar = document.getElementById("brand-avatar");
   const markText = document.getElementById("brand-mark-text");
   const brandName = document.getElementById("brand-name");
-  const brandMarkText = organization?.appearance?.brandMarkText?.trim() || "RY";
+  const brandMarkText = sanitizeText(organization?.appearance?.brandMarkText, "RY");
 
-  brandName.textContent = organization?.name || "人社青年";
+  brandName.textContent = sanitizeText(organization?.name, "人社青年");
   markText.textContent = brandMarkText;
 
   if (organization?.avatarUrl) {
@@ -28,7 +33,17 @@ function applyBranding(organization) {
 
 function renderHighlights(items) {
   const container = document.getElementById("highlight-list");
-  container.innerHTML = items
+  const normalizedItems = Array.isArray(items) && items.length
+    ? items.map((item) => sanitizeText(item)).filter(Boolean)
+    : [];
+  const fallbackItems = [
+    "把複雜的公共議題整理成更容易理解的切入點",
+    "用青年視角重新閱讀人文社會中的關鍵概念",
+    "讓知識轉譯成為更多人能參與的公共討論入口"
+  ];
+  const list = normalizedItems.length ? normalizedItems : fallbackItems;
+
+  container.innerHTML = list
     .map(
       (item, index) => `
         <article>
@@ -43,12 +58,28 @@ function renderHighlights(items) {
 
 function renderThemes(items) {
   const container = document.getElementById("theme-list");
-  container.innerHTML = items.map((item) => `<span class="theme-pill">${item}</span>`).join("");
+  const normalizedItems = Array.isArray(items) && items.length
+    ? items.map((item) => sanitizeText(item)).filter(Boolean)
+    : [];
+  const list = normalizedItems.length
+    ? normalizedItems
+    : ["公共參與", "社會議題", "人文社會", "知識轉譯"];
+  container.innerHTML = list.map((item) => `<span class="theme-pill">${item}</span>`).join("");
 }
 
 function renderAbout(paragraphs) {
   const container = document.getElementById("about-list");
-  container.innerHTML = paragraphs.map((text) => `<p>${text}</p>`).join("");
+  const normalizedParagraphs = Array.isArray(paragraphs) && paragraphs.length
+    ? paragraphs.map((text) => sanitizeText(text)).filter(Boolean)
+    : [];
+  const list = normalizedParagraphs.length
+    ? normalizedParagraphs
+    : [
+        "我們是一群對人文社會充滿熱忱的高中生與大學生，希望把看似遙遠的公共議題帶回日常。",
+        "透過整理、轉譯與刊物書寫，我們嘗試讓更多人能用自己的節奏接近社會議題。",
+        "從 Instagram 到網站刊物，我們持續累積青年視角的公共參與內容。"
+      ];
+  container.innerHTML = list.map((text) => `<p>${text}</p>`).join("");
 }
 
 function renderBankTransfer(bankTransfer) {
@@ -58,10 +89,10 @@ function renderBankTransfer(bankTransfer) {
     return;
   }
 
-  document.getElementById("transfer-bank-name").textContent = bankTransfer.bankName;
-  document.getElementById("transfer-account-name").textContent = bankTransfer.accountName || "-";
-  document.getElementById("transfer-account-number").textContent = bankTransfer.accountNumber;
-  document.getElementById("transfer-note").textContent = bankTransfer.note || "";
+  document.getElementById("transfer-bank-name").textContent = sanitizeText(bankTransfer.bankName, "-");
+  document.getElementById("transfer-account-name").textContent = sanitizeText(bankTransfer.accountName, "-");
+  document.getElementById("transfer-account-number").textContent = sanitizeText(bankTransfer.accountNumber, "-");
+  document.getElementById("transfer-note").textContent = sanitizeText(bankTransfer.note);
   card.classList.remove("hidden");
 }
 
@@ -69,12 +100,15 @@ function renderDonation(donation) {
   const targetAmount = document.getElementById("target-amount");
   const progressCaption = document.getElementById("progress-caption");
   const progressBar = document.getElementById("progress-bar");
-  const raised = Number(donation.raised) || 0;
-  const target = Number(donation.target) || 0;
-  const showTarget = donation.showTarget !== false;
+  const raised = Number(donation?.raised) || 0;
+  const target = Number(donation?.target) || 0;
+  const showTarget = donation?.showTarget !== false;
 
-  document.getElementById("donation-title").textContent = donation.title || "支持人社青年";
-  document.getElementById("donation-summary").textContent = donation.summary || "";
+  document.getElementById("donation-title").textContent = sanitizeText(donation?.title, "支持人社青年");
+  document.getElementById("donation-summary").textContent = sanitizeText(
+    donation?.summary,
+    "你的支持會協助我們持續整理議題、製作刊物，讓更多青年能參與公共討論。"
+  );
   document.getElementById("raised-amount").textContent = formatCurrency(raised);
 
   if (showTarget && target > 0) {
@@ -91,26 +125,30 @@ function renderDonation(donation) {
   }
 
   const list = document.getElementById("donation-accounts");
-  list.innerHTML = (donation.accounts || []).map((item) => `<li>${item}</li>`).join("");
+  const accounts = Array.isArray(donation?.accounts)
+    ? donation.accounts.map((item) => sanitizeText(item)).filter(Boolean)
+    : [];
+  list.innerHTML = accounts.join("") ? accounts.map((item) => `<li>${item}</li>`).join("") : "";
 
-  renderBankTransfer(donation.bankTransfer);
+  renderBankTransfer(donation?.bankTransfer);
 }
 
 function renderPublications(items) {
   const container = document.getElementById("publication-list");
-  container.innerHTML = items
+  const publications = Array.isArray(items) ? items : [];
+  container.innerHTML = publications
     .map(
       (item) => `
         <article class="publication-item">
           <header>
             <div>
-              <h3>${item.title}</h3>
+              <h3>${sanitizeText(item.title, "未命名刊物")}</h3>
             </div>
             <div class="publication-meta">
-              ${item.tag ? `<span class="topic-pill">${item.tag}</span>` : ""}
+              ${item.tag ? `<span class="topic-pill">${sanitizeText(item.tag)}</span>` : ""}
             </div>
           </header>
-          <p>${item.description || ""}</p>
+          <p>${sanitizeText(item.description)}</p>
           <a class="inline-link publication-link" href="/publication.html?id=${item.id}">閱讀完整刊物</a>
         </article>
       `
@@ -123,15 +161,15 @@ function renderInstagram(instagram) {
     return;
   }
 
-  const handle = String(instagram.handle || "").trim();
+  const handle = sanitizeText(instagram.handle, "@instagram");
   const normalizedHandle = handle.replace(/^@+/, "");
   const profileUrl = instagram.url || (normalizedHandle ? `https://www.instagram.com/${normalizedHandle}/` : "#");
 
-  document.getElementById("ig-followers").textContent = instagram.followers || "-";
-  document.getElementById("ig-posts").textContent = instagram.posts || "-";
-  document.getElementById("ig-following").textContent = instagram.following || "-";
+  document.getElementById("ig-followers").textContent = sanitizeText(instagram.followers, "-");
+  document.getElementById("ig-posts").textContent = sanitizeText(instagram.posts, "-");
+  document.getElementById("ig-following").textContent = sanitizeText(instagram.following, "-");
   document.getElementById("ig-link").href = profileUrl;
-  document.getElementById("ig-link").textContent = `${handle || "@instagram"} 前往 Instagram`;
+  document.getElementById("ig-link").textContent = `${handle} 前往 Instagram`;
 }
 
 async function refreshInstagramStats(instagram) {
@@ -198,8 +236,11 @@ async function loadSite() {
 
   applyBranding(data.organization || {});
   document.getElementById("hero-title").textContent =
-    data.organization?.tagline || "用學生的眼光看人社，用人社的視角看社會";
-  document.getElementById("hero-mission").textContent = data.organization?.mission || "";
+    sanitizeText(data.organization?.tagline, "用學生的眼光看人社，用人社的視角看社會");
+  document.getElementById("hero-mission").textContent = sanitizeText(
+    data.organization?.mission,
+    "我們把公共議題轉譯成更容易閱讀與理解的內容，邀請更多青年一起參與社會討論。"
+  );
 
   renderThemes(data.organization?.themes || []);
   renderHeroStats(data);
