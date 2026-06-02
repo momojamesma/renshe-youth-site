@@ -11,7 +11,7 @@
       <section id="login-view" class="admin-card narrow">
         <p class="eyebrow">Admin Login</p>
         <h1>後台登入</h1>
-        <p class="caption">請輸入管理員帳號與密碼，登入後即可編輯網站內容。</p>
+        <p class="caption">請輸入管理員帳號與密碼，登入後即可管理網站內容、刊物與管理員帳號。</p>
         <form id="login-form" class="stack-form">
           <label>
             帳號
@@ -37,8 +37,8 @@
 
         <form id="dashboard-form" class="stack-form">
           <div class="section-heading compact">
-            <h2>組織資訊</h2>
-            <p class="caption">可調整網站名稱、首頁主標、使命文字、品牌頭像與 Instagram 資訊。</p>
+            <h2>網站基本資訊</h2>
+            <p class="caption">可編輯品牌名稱、首頁主標、Instagram 帳號與頭像顯示。</p>
           </div>
 
           <div class="admin-grid">
@@ -84,7 +84,7 @@
                 type="file"
                 accept="image/png,image/jpeg,image/webp,image/gif"
               />
-              <span class="caption">支援 PNG、JPG、WEBP、GIF，建議 1.5 MB 以內。</span>
+              <span class="caption">支援 PNG、JPG、WEBP、GIF，檔案大小請控制在 1.5 MB 內。</span>
             </label>
             <div class="button-column avatar-preview-panel">
               <div class="avatar-preview-card">
@@ -98,7 +98,7 @@
 
           <div class="section-heading compact">
             <h2>關於我們</h2>
-            <p class="caption">可編輯前台關於我們區塊的三段介紹文字。</p>
+            <p class="caption">首頁會顯示三段介紹文字，建議每段聚焦不同面向。</p>
           </div>
 
           <div class="about-editor">
@@ -117,8 +117,8 @@
           </div>
 
           <div class="section-heading compact">
-            <h2>首頁重點</h2>
-            <p class="caption">可調整首頁三張重點卡片的標題內容。</p>
+            <h2>首頁重點議題</h2>
+            <p class="caption">這三則會出現在首頁重點議題區塊。</p>
           </div>
 
           <div class="about-editor">
@@ -138,7 +138,7 @@
 
           <div class="section-heading compact">
             <h2>募款資訊</h2>
-            <p class="caption">可調整募款標題、目前金額、目標金額與前台說明文字。</p>
+            <p class="caption">可編輯募款標題、說明、目前募得金額與目標金額。</p>
           </div>
 
           <div class="admin-grid">
@@ -168,7 +168,7 @@
 
           <div class="section-heading compact">
             <h2>匯款資訊</h2>
-            <p class="caption">可調整前台募款頁上的銀行名稱、戶名、帳號與備註。</p>
+            <p class="caption">若有填寫銀行名稱與帳號，前台會顯示匯款資訊卡片。</p>
           </div>
 
           <div class="admin-grid">
@@ -193,7 +193,7 @@
 
           <div class="section-heading compact">
             <h2>刊物管理</h2>
-            <p class="caption">可新增、刪除與編輯刊物；內文只會出現在文章詳細頁。</p>
+            <p class="caption">可新增、刪除與編輯刊物，也可直接由 Instagram 貼文網址匯入刊物草稿。</p>
           </div>
 
           <div class="editor-toolbar import-toolbar">
@@ -207,11 +207,11 @@
                   placeholder="貼上 Instagram 貼文或 Reels 網址"
                 />
                 <button id="import-instagram-button" class="button secondary" type="button">
-                  匯入為刊物
+                  匯入草稿
                 </button>
               </div>
               <p class="caption">
-                系統會保留原貼文換行，自動產出摘要與關鍵詞標籤，再建立成刊物草稿。
+                系統會自動帶入標題、標籤、說明與內文草稿，匯入後仍可在下方手動調整。
               </p>
               <p id="publication-import-message" class="message compact"></p>
             </div>
@@ -220,7 +220,7 @@
 
           <div class="section-heading compact">
             <h2>管理員帳號</h2>
-            <p class="caption">可新增或刪除管理員；初始管理員 <code>renshe_admin</code> 不能刪除。</p>
+            <p class="caption">可新增其他管理員。初始管理員 <code>renshe_admin</code> 不能被刪除。</p>
           </div>
 
           <div id="admin-account-list" class="admin-account-list"></div>
@@ -235,12 +235,10 @@
               <input id="new-admin-password" type="password" />
             </label>
             <div class="button-column">
-              <span class="caption">建立後可立即使用新帳密登入後台。</span>
+              <span class="caption">帳號可使用英文、數字、底線 `_`、句點 `.`，最長 30 字元；密碼至少 8 碼。</span>
               <button id="create-admin-button" class="button secondary" type="button">新增管理員</button>
             </div>
           </div>
-
-          <p class="caption">帳號只能使用英文、數字、底線 <code>_</code> 與句點 <code>.</code>，最長 30 字元；密碼至少 8 碼。</p>
 
           <p id="admin-message" class="message"></p>
           <button class="button primary" type="submit">儲存網站內容</button>

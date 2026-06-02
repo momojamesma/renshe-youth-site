@@ -37,13 +37,18 @@ function escapeHtml(value) {
     .replaceAll('"', "&quot;");
 }
 
+function sanitizeText(value, fallback = "") {
+  const text = String(value ?? "").replace(/\?+/g, "").trim();
+  return text || fallback;
+}
+
 function validateAdminCredentials(username, password) {
   if (!ADMIN_USERNAME_RULE.test(username)) {
-    return "帳號只能使用英文、數字、底線與句點，且長度需在 1 到 30 字元之間。";
+    return "帳號只能使用英文、數字、底線或句點，長度需介於 1 到 30 字元。";
   }
 
   if (typeof password !== "string" || password.length < 8) {
-    return "密碼至少需要 8 碼。";
+    return "密碼至少需要 8 個字元。";
   }
 
   return "";
@@ -79,7 +84,7 @@ function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("無法讀取圖片檔案。"));
+    reader.onerror = () => reject(new Error("無法讀取這個圖片檔案。"));
     reader.readAsDataURL(file);
   });
 }
@@ -172,33 +177,30 @@ function fillForm(data) {
   const appearance = currentData.organization?.appearance || {};
   const instagram = currentData.organization?.instagram || {};
 
-  document.getElementById("organization-name-input").value = currentData.organization.name ?? "";
-  document.getElementById("organization-tagline-input").value =
-    currentData.organization.tagline ?? "";
-  document.getElementById("organization-mission-input").value =
-    currentData.organization.mission ?? "";
-  instagramHandleInput.value = instagram.handle ?? "";
-  instagramUrlInput.value = instagram.url ?? "";
+  document.getElementById("organization-name-input").value = sanitizeText(currentData.organization.name);
+  document.getElementById("organization-tagline-input").value = sanitizeText(currentData.organization.tagline);
+  document.getElementById("organization-mission-input").value = sanitizeText(currentData.organization.mission);
+  instagramHandleInput.value = sanitizeText(instagram.handle);
+  instagramUrlInput.value = sanitizeText(instagram.url);
   currentAvatarDataUrl = currentData.organization.avatarUrl ?? "";
   avatarFileInput.value = "";
-  brandMarkTextInput.value = appearance.brandMarkText ?? "RY";
-  document.getElementById("about-paragraph-1").value = currentData.organization.about?.[0] ?? "";
-  document.getElementById("about-paragraph-2").value = currentData.organization.about?.[1] ?? "";
-  document.getElementById("about-paragraph-3").value = currentData.organization.about?.[2] ?? "";
-  document.getElementById("highlight-1").value = currentData.organization.highlights?.[0] ?? "";
-  document.getElementById("highlight-2").value = currentData.organization.highlights?.[1] ?? "";
-  document.getElementById("highlight-3").value = currentData.organization.highlights?.[2] ?? "";
+  brandMarkTextInput.value = sanitizeText(appearance.brandMarkText, "RY");
+  document.getElementById("about-paragraph-1").value = sanitizeText(currentData.organization.about?.[0]);
+  document.getElementById("about-paragraph-2").value = sanitizeText(currentData.organization.about?.[1]);
+  document.getElementById("about-paragraph-3").value = sanitizeText(currentData.organization.about?.[2]);
+  document.getElementById("highlight-1").value = sanitizeText(currentData.organization.highlights?.[0]);
+  document.getElementById("highlight-2").value = sanitizeText(currentData.organization.highlights?.[1]);
+  document.getElementById("highlight-3").value = sanitizeText(currentData.organization.highlights?.[2]);
 
-  document.getElementById("donation-title-input").value = donation.title;
+  document.getElementById("donation-title-input").value = sanitizeText(donation.title);
   document.getElementById("donation-raised-input").value = donation.raised;
   document.getElementById("donation-target-input").value = donation.target;
   document.getElementById("donation-show-target-input").checked = donation.showTarget;
-  document.getElementById("donation-summary-input").value = donation.summary;
-  document.getElementById("transfer-bank-name-input").value = donation.bankTransfer.bankName;
-  document.getElementById("transfer-account-name-input").value = donation.bankTransfer.accountName;
-  document.getElementById("transfer-account-number-input").value =
-    donation.bankTransfer.accountNumber;
-  document.getElementById("transfer-note-input").value = donation.bankTransfer.note;
+  document.getElementById("donation-summary-input").value = sanitizeText(donation.summary);
+  document.getElementById("transfer-bank-name-input").value = sanitizeText(donation.bankTransfer.bankName);
+  document.getElementById("transfer-account-name-input").value = sanitizeText(donation.bankTransfer.accountName);
+  document.getElementById("transfer-account-number-input").value = sanitizeText(donation.bankTransfer.accountNumber);
+  document.getElementById("transfer-note-input").value = sanitizeText(donation.bankTransfer.note);
   document.getElementById("instagram-post-url").value = "";
   publicationImportMessage.textContent = "";
   avatarFileMessage.textContent = "";
@@ -311,15 +313,13 @@ loginForm.addEventListener("submit", async (event) => {
 
   const response = await fetch("/api/login", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
 
   const result = await response.json();
   if (!response.ok) {
-    loginMessage.textContent = result.error || "登入失敗。";
+    loginMessage.textContent = result.error || "登入失敗，請確認帳號密碼。";
     return;
   }
 
@@ -342,15 +342,13 @@ dashboardForm.addEventListener("submit", async (event) => {
 
   const response = await fetch("/api/admin/site-data", {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
 
   const result = await response.json();
   if (!response.ok) {
-    saveMessage.textContent = result.error || "儲存失敗。";
+    saveMessage.textContent = result.error || "儲存失敗，請稍後再試。";
     return;
   }
 
@@ -372,7 +370,7 @@ addPublicationButton.addEventListener("click", () => {
         title: "新刊物標題",
         tag: "",
         description: "請輸入刊物說明。",
-        content: "請輸入完整刊物內容。"
+        content: "請輸入刊物內文。"
       }
     ]
   };
@@ -413,9 +411,7 @@ importInstagramButton.addEventListener("click", async () => {
   try {
     const response = await fetch("/api/admin/import-publication", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url })
     });
 
@@ -441,8 +437,8 @@ importInstagramButton.addEventListener("click", async () => {
 
     renderPublications();
     urlInput.value = "";
-    publicationImportMessage.textContent = "已匯入為刊物草稿，請記得儲存網站內容。";
-  } catch (error) {
+    publicationImportMessage.textContent = "Instagram 貼文已匯入成刊物草稿，記得再檢查內容後儲存。";
+  } catch {
     publicationImportMessage.textContent = "Instagram 匯入失敗，請稍後再試。";
   } finally {
     importInstagramButton.disabled = false;
@@ -462,9 +458,7 @@ createAdminButton.addEventListener("click", async () => {
 
   const response = await fetch("/api/admin/accounts", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password })
   });
 
@@ -491,8 +485,7 @@ adminAccountList.addEventListener("click", async (event) => {
     return;
   }
 
-  const confirmed = window.confirm(`確定要刪除管理員 ${username} 嗎？`);
-  if (!confirmed) {
+  if (!window.confirm(`確定要刪除管理員 ${username} 嗎？`)) {
     return;
   }
 
@@ -527,7 +520,7 @@ avatarFileInput.addEventListener("change", async (event) => {
   }
 
   if (file.size > MAX_AVATAR_FILE_SIZE) {
-    avatarFileMessage.textContent = "圖片檔案請控制在 1.5 MB 以內。";
+    avatarFileMessage.textContent = "圖片大小不能超過 1.5 MB。";
     avatarFileInput.value = "";
     return;
   }
@@ -535,7 +528,7 @@ avatarFileInput.addEventListener("change", async (event) => {
   try {
     currentAvatarDataUrl = await readFileAsDataUrl(file);
     renderAvatarPreview();
-    avatarFileMessage.textContent = "頭像已載入，記得按下儲存網站內容。";
+    avatarFileMessage.textContent = "頭像已載入，記得儲存網站內容。";
   } catch (error) {
     avatarFileMessage.textContent = error.message || "讀取圖片失敗。";
   }
@@ -544,7 +537,7 @@ avatarFileInput.addEventListener("change", async (event) => {
 avatarClearButton.addEventListener("click", () => {
   currentAvatarDataUrl = "";
   avatarFileInput.value = "";
-  avatarFileMessage.textContent = "頭像已移除，記得按下儲存網站內容。";
+  avatarFileMessage.textContent = "頭像已清除，記得儲存網站內容。";
   renderAvatarPreview();
 });
 
