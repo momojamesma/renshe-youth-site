@@ -411,7 +411,7 @@ importInstagramButton.addEventListener("click", async () => {
   importInstagramButton.disabled = true;
 
   try {
-    const response = await fetch("/api/admin/publications/import-instagram", {
+    const response = await fetch("/api/admin/import-publication", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

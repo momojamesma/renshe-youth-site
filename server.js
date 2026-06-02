@@ -1019,7 +1019,11 @@ async function handleApi(req, res, pathname) {
     return true;
   }
 
-  if (pathname === "/api/admin/publications/import-instagram" && req.method === "POST") {
+  if (
+    (pathname === "/api/admin/publications/import-instagram" ||
+      pathname === "/api/admin/import-publication") &&
+    req.method === "POST"
+  ) {
     if (!requireAuth(req, res)) {
       return true;
     }
