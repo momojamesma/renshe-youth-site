@@ -2,7 +2,6 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { execFile } = require("child_process");
 const { URL } = require("url");
 
 const PORT = process.env.PORT || 3000;
@@ -102,25 +101,28 @@ function escapeRegExp(value) {
 }
 
 function extractMetaContent(html, attribute, key) {
-  const escapedKey = escapeRegExp(key);
-  const patterns = [
-    new RegExp(
-      `<meta[^>]+${attribute}=(["'])${escapedKey}\\1[^>]+content=(["'])([\\s\\S]*?)\\2[^>]*>`,
-      "i"
-    ),
-    new RegExp(
-      `<meta[^>]+content=(["'])([\\s\\S]*?)\\1[^>]+${attribute}=(["'])${escapedKey}\\3[^>]*>`,
-      "i"
-    )
+  const source = String(html || "");
+  const attributeMarkers = [
+    `${attribute}="${key}"`,
+    `${attribute}='${key}'`
   ];
 
-  for (const pattern of patterns) {
-    const match = html.match(pattern);
-    if (match) {
-      const value = match[3] || match[2];
-      if (value) {
-        return decodeHtmlEntities(value);
-      }
+  for (const marker of attributeMarkers) {
+    const markerIndex = source.indexOf(marker);
+    if (markerIndex < 0) {
+      continue;
+    }
+
+    const tagStart = source.lastIndexOf("<meta", markerIndex);
+    const tagEnd = source.indexOf(">", markerIndex);
+    if (tagStart < 0 || tagEnd < 0) {
+      continue;
+    }
+
+    const tagText = source.slice(tagStart, tagEnd + 1);
+    const contentMatch = tagText.match(/\bcontent=(["'])([\s\S]*?)\1/i);
+    if (contentMatch?.[2]) {
+      return decodeHtmlEntities(contentMatch[2]);
     }
   }
 
@@ -130,47 +132,38 @@ function extractMetaContent(html, attribute, key) {
 function fetchRemoteText(targetUrl, options = {}) {
   const timeoutSeconds =
     Number.isFinite(options.timeoutSeconds) && options.timeoutSeconds > 0
-      ? String(options.timeoutSeconds)
-      : "12";
+      ? options.timeoutSeconds
+      : 12;
   const acceptHeader =
     typeof options.acceptHeader === "string" && options.acceptHeader.trim()
       ? options.acceptHeader.trim()
       : "text/html,application/xhtml+xml";
-  const execTimeoutMs = Math.max(Number.parseInt(timeoutSeconds, 10) * 1000 + 500, 1500);
+  const requestTimeoutMs = Math.max(Math.round(timeoutSeconds * 1000), 1500);
 
-  return new Promise((resolve, reject) => {
-    const curlBinary = process.platform === "win32" ? "curl.exe" : "curl";
-    const args = [
-      "-L",
-      "--silent",
-      "--show-error",
-      "--max-time",
-      timeoutSeconds,
-      "-A",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
-      "-H",
-      `Accept: ${acceptHeader}`,
-      "-H",
-      "Accept-Language: zh-TW,zh;q=0.9,en;q=0.8",
-      "-H",
-      "Cache-Control: no-cache",
-      targetUrl
-    ];
+  if (typeof fetch !== "function") {
+    return Promise.reject(new Error("Global fetch is not available."));
+  }
 
-    execFile(
-      curlBinary,
-      args,
-      { maxBuffer: 8 * 1024 * 1024, timeout: execTimeoutMs, windowsHide: true },
-      (error, stdout, stderr) => {
-        if (error) {
-          reject(new Error(stderr || error.message || "Remote request failed."));
-          return;
-        }
-
-        resolve(stdout);
+  return (async () => {
+    const response = await fetch(targetUrl, {
+      method: "GET",
+      redirect: "follow",
+      signal: AbortSignal.timeout(requestTimeoutMs),
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+        Accept: acceptHeader,
+        "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
+        "Cache-Control": "no-cache"
       }
-    );
-  });
+    });
+
+    if (!response.ok) {
+      throw new Error(`Remote request failed with status ${response.status}.`);
+    }
+
+    return response.text();
+  })();
 }
 
 async function fetchRemoteJson(targetUrl, options = {}) {
@@ -265,21 +258,50 @@ function decodeJsonLikeText(value) {
   );
 }
 
+function extractJsonStringAfterMarker(source, marker) {
+  const text = String(source || "");
+  const markerIndex = text.indexOf(marker);
+  if (markerIndex < 0) {
+    return "";
+  }
+
+  let value = "";
+  let escaped = false;
+  for (let index = markerIndex + marker.length; index < text.length; index += 1) {
+    const character = text[index];
+    if (escaped) {
+      value += `\\${character}`;
+      escaped = false;
+      continue;
+    }
+
+    if (character === "\\") {
+      escaped = true;
+      continue;
+    }
+
+    if (character === '"') {
+      return decodeJsonLikeText(value).trim();
+    }
+
+    value += character;
+  }
+
+  return "";
+}
+
 function extractInstagramCaptionFromHtml(html) {
-  const textPatterns = [
-    /"edge_media_to_caption"\s*:\s*\{"edges":\[\{"node":\{"text":"((?:\\.|[^"\\])*)"/i,
-    /"caption"\s*:\s*"((?:\\.|[^"\\])*)"/i,
-    /"articleBody"\s*:\s*"((?:\\.|[^"\\])*)"/i
+  const textMarkers = [
+    '"edge_media_to_caption":{"edges":[{"node":{"text":"',
+    '"caption":"',
+    '"articleBody":"'
   ];
   const candidates = [];
 
-  for (const pattern of textPatterns) {
-    const match = String(html || "").match(pattern);
-    if (match?.[1]) {
-      const decoded = decodeJsonLikeText(match[1]).trim();
-      if (decoded) {
-        candidates.push(decoded);
-      }
+  for (const marker of textMarkers) {
+    const decoded = extractJsonStringAfterMarker(html, marker);
+    if (decoded) {
+      candidates.push(decoded);
     }
   }
 
@@ -1044,20 +1066,21 @@ async function handleApi(req, res, pathname) {
       const oembedUrl = `https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(
         normalizedUrl
       )}`;
-      const [oembedResult, htmlResult, embedResult] = await Promise.allSettled([
-        fetchRemoteJson(oembedUrl, { timeoutSeconds: 3 }),
-        fetchRemoteText(normalizedUrl, { timeoutSeconds: 3 }),
-        fetchRemoteText(`${normalizedUrl}embed/captioned/`, { timeoutSeconds: 3 })
-      ]);
 
-      if (oembedResult.status === "fulfilled") {
-        oembedData = oembedResult.value;
+      try {
+        html = await fetchRemoteText(normalizedUrl, { timeoutSeconds: 4 });
+      } catch {
+        html = "";
       }
-      const htmlCandidates = [htmlResult, embedResult]
-        .filter((result) => result.status === "fulfilled")
-        .map((result) => result.value)
-        .filter((value) => typeof value === "string" && value.trim());
-      html = htmlCandidates.sort((left, right) => right.length - left.length)[0] || "";
+
+      const extractedCaption = html ? extractInstagramCaptionFromHtml(html) : "";
+      if (!extractedCaption) {
+        try {
+          oembedData = await fetchRemoteJson(oembedUrl, { timeoutSeconds: 2 });
+        } catch {
+          oembedData = null;
+        }
+      }
       if (!html && !oembedData) {
         sendJson(res, 422, {
           error: "目前無法讀取這則 Instagram 貼文，請確認網址是否公開可見。"
