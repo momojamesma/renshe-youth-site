@@ -1017,7 +1017,7 @@ async function handleApi(req, res, pathname) {
         return true;
       }
 
-      const html = await fetchRemoteText(normalizedUrl);
+      let html = "";
       let oembedData = null;
       try {
         const oembedUrl = `https://www.instagram.com/api/v1/oembed/?url=${encodeURIComponent(
@@ -1027,12 +1027,30 @@ async function handleApi(req, res, pathname) {
       } catch {
         oembedData = null;
       }
+      try {
+        html = await fetchRemoteText(normalizedUrl);
+      } catch {
+        html = "";
+      }
+      if (!html) {
+        try {
+          html = await fetchRemoteText(`${normalizedUrl}embed/captioned/`);
+        } catch {
+          html = "";
+        }
+      }
+      if (!html && !oembedData) {
+        sendJson(res, 422, {
+          error: "目前無法讀取這則 Instagram 貼文，請確認網址是否公開可見。"
+        });
+        return true;
+      }
 
       const publication = buildInstagramPublicationFromSources(normalizedUrl, html, oembedData);
       sendJson(res, 200, { ok: true, publication });
       return true;
     } catch {
-      sendJson(res, 502, {
+      sendJson(res, 422, {
         error: "目前無法讀取這則 Instagram 貼文，請確認網址是否公開可見。"
       });
       return true;
