@@ -454,6 +454,19 @@ button {
   line-height: 1.9;
 }
 
+.hero-copy,
+.hero-panel,
+.section-copy,
+.publication-detail,
+.footer-copy,
+.footer-meta,
+.donation-card,
+.publication-item,
+.about-copy p,
+.manifesto-card {
+  min-width: 0;
+}
+
 #hero-mission {
   max-width: var(--content-max);
   color: rgba(32, 48, 57, 0.86);
@@ -639,6 +652,7 @@ button {
   gap: 12px;
   margin-bottom: 26px;
   max-width: 46rem;
+  padding-inline: clamp(4px, 1vw, 12px);
 }
 
 .section-heading h2 {
@@ -651,6 +665,7 @@ button {
   font-size: 1.03rem;
   line-height: 1.9;
   max-width: var(--content-max);
+  text-wrap: pretty;
 }
 
 .card-grid,
@@ -703,6 +718,7 @@ button {
   align-content: start;
   gap: 16px;
   max-width: 42rem;
+  padding-inline: clamp(4px, 1vw, 12px);
 }
 
 .bullet-list {
@@ -819,6 +835,8 @@ button {
 
 .publication-item p {
   color: rgba(32, 48, 57, 0.84);
+  max-width: 34rem;
+  text-wrap: pretty;
 }
 
 .publication-item header {
@@ -865,6 +883,7 @@ button {
   border-radius: var(--radius-xl);
   background: rgba(255, 252, 247, 0.88);
   box-shadow: var(--shadow-soft);
+  overflow-wrap: anywhere;
 }
 
 .publication-detail h1 {
@@ -879,6 +898,8 @@ button {
   color: var(--muted);
   font-size: 1.06rem;
   line-height: 1.9;
+  max-width: 40rem;
+  text-wrap: pretty;
 }
 
 .publication-content {
@@ -890,6 +911,7 @@ button {
 .publication-content p {
   margin: 0;
   line-height: 1.95;
+  max-width: 40rem;
 }
 
 .status-pill {
@@ -917,6 +939,7 @@ button {
   background: rgba(255, 252, 246, 0.68);
   box-shadow: var(--shadow-soft);
   line-height: 1.95;
+  text-wrap: pretty;
 }
 
 .site-footer {
@@ -941,6 +964,7 @@ footer[id] {
 
 .footer-copy {
   max-width: 40rem;
+  padding-inline: clamp(4px, 1vw, 12px);
 }
 
 .footer-meta {
@@ -1348,5 +1372,11 @@ textarea {
 
   .section-heading {
     margin-bottom: 22px;
+    padding-inline: 0;
+  }
+
+  .section-copy,
+  .footer-copy {
+    padding-inline: 0;
   }
 }
