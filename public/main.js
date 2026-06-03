@@ -3,7 +3,7 @@ const DEFAULT_CONTENT = {
     name: "人社青年",
     tagline: "用學生的眼光看人社，用人社的視角看社會",
     mission:
-      "我們是一群關心公共議題的人文社會青年，透過刊物、社群貼文與公共討論，把抽象概念整理成更容易理解、也更接近日常生活的內容。",
+      "人社青年是一個由高中生與大學生共同維護的平台，持續整理社會建構、特權、不平等、轉型正義與公共討論等主題，讓抽象概念可以被更多青年真正讀懂。",
     instagram: {
       handle: "@youth.hss",
       url: "https://www.instagram.com/youth.hss/",
@@ -11,16 +11,16 @@ const DEFAULT_CONTENT = {
       posts: "93",
       following: "58"
     },
-    themes: ["公共參與", "社會議題", "青年觀點", "人文思辨"],
+    themes: ["社會建構", "特權與不平等", "自由與霸權", "轉型正義"],
     highlights: [
-      "把抽象的人文社會概念，轉成青年也能快速理解的內容。",
-      "從新聞事件與公共討論出發，補上脈絡、概念與制度視角。",
-      "讓更多人可以從閱讀開始，逐步進入公共參與的現場。"
+      "把原本散在新聞、社群與課堂裡的概念重新整理成可閱讀內容。",
+      "用青年視角處理複雜議題，但不把內容寫成只有立場、沒有脈絡。",
+      "從貼文延伸到長文刊物，讓讀者可以從快速理解走向完整閱讀。"
     ],
     about: [
-      "人社青年由對人文社會充滿熱忱的高中生與大學生共同經營，關注青年如何理解社會，也關注青年如何實際參與社會。",
-      "我們希望讓議題不只停留在資訊接收，而能成為對話、思考與行動的起點，讓更多人願意靠近那些原本覺得困難的概念。",
-      "無論是刊物、貼文或募款支持，都是為了讓這個平台可以更穩定地整理內容、累積觀點，並與更多讀者建立長期關係。"
+      "我們不是大型媒體，也不是智庫。人社青年更像是一個持續整理議題的青年內容團隊，透過寫作把零散資訊變成有脈絡的知識。",
+      "從 Instagram 貼文到網站刊物，我們關心的不只是能不能被看見，而是內容能不能真的幫助讀者理解制度、概念與爭點。",
+      "這個網站保留了比社群貼文更長的閱讀空間，也保留一種比較慢的節奏，讓公共議題不只停在轉貼與表態。"
     ],
     appearance: {
       brandMarkText: "RY"
@@ -29,20 +29,20 @@ const DEFAULT_CONTENT = {
   donation: {
     title: "支持人社青年",
     summary:
-      "你的支持會成為內容製作、平台維運與青年公共參與行動的基礎，讓更多議題能被穩定整理，也讓更多人有機會在這裡開始理解社會。",
+      "你的支持會直接用在內容整理、刊物撰寫、設計製作與網站維運。對青年團隊來說，穩定更新不是理所當然，而是需要時間、勞力與資源一起撐起來。",
     showTarget: false,
     target: 500000,
     raised: 186400,
     accounts: [
-      "支持刊物製作、社群內容整理與網站維運。",
-      "幫助青年團隊持續進行公共議題轉譯與知識整理。",
-      "讓更多人能透過閱讀、討論與參與，接近公共議題。"
+      "支持網站刊物、社群貼文與議題整理持續更新。",
+      "支持青年團隊投入公共議題研究、寫作與編輯工作。",
+      "支持一個可以讓人慢慢理解社會，而不是只快速表態的平台。"
     ],
     bankTransfer: {
       bankName: "郵局",
       accountName: "人社青年",
       accountNumber: "00310530676964",
-      note: "匯款完成後，可透過 Instagram 私訊或其他聯絡方式告知，以利我們後續核對。"
+      note: "匯款完成後，歡迎透過 Instagram 私訊告知，以利後續核對。"
     }
   },
   paymentGateway: {
@@ -58,7 +58,7 @@ const DEFAULT_CONTENT = {
       id: 1,
       title: "當我們談社會建構，我們在談什麼？",
       tag: "社會建構",
-      description: "從日常分類與公共論述出發，重新理解那些看似理所當然的社會規則。",
+      description: "從分類、規範與日常語言出發，重新理解社會規則如何被建立。",
       content:
         "這篇刊物從社會建構論切入，討論我們習以為常的分類與價值判準，是如何在歷史、文化與制度的交互作用下被建立起來。當我們重新看待這些規則，就更能理解公共議題中的衝突，並看見改變的可能。"
     },
@@ -74,7 +74,7 @@ const DEFAULT_CONTENT = {
       id: 3,
       title: "自由、秩序與討論空間：青年如何面對公共爭議",
       tag: "公共討論",
-      description: "面對爭議時，我們如何保留討論空間，而不是只剩下立場對撞。",
+      description: "在快速對立的時代，保留討論空間比表態更困難，也更重要。",
       content:
         "在快速對立的時代，真正困難的往往不是表態，而是留下討論的空間。這篇刊物想談的是，當青年面對公共爭議時，如何同時理解自由、秩序與責任之間的張力，並在現場保持思辨能力。"
     },
@@ -100,11 +100,7 @@ function isCorruptedText(value) {
     return true;
   }
 
-  if (!text.includes("http") && text.split("?").length > 3) {
-    return true;
-  }
-
-  return false;
+  return !text.includes("http") && text.split("?").length > 3;
 }
 
 function sanitizeText(value, fallback = "") {
@@ -218,11 +214,10 @@ function renderThemes(items) {
 function renderHeroStats(publicationsCount) {
   const container = document.getElementById("hero-stats");
   const count = Number(publicationsCount) || DEFAULT_CONTENT.publications.length;
-
   const items = [
     { value: "青年視角", label: "內容切入" },
-    { value: `${count} 篇`, label: "站上刊物" },
-    { value: "公共參與", label: "行動方向" }
+    { value: `${count} 篇`, label: "網站刊物" },
+    { value: "長文整理", label: "閱讀形式" }
   ];
 
   container.innerHTML = items
@@ -244,9 +239,9 @@ function renderHighlights(items) {
     .map(
       (item, index) => `
         <article>
-          <p class="panel-label">Focus 0${index + 1}</p>
+          <p class="panel-label">0${index + 1}</p>
           <h3>${item}</h3>
-          <p>我們用更完整的脈絡、更多一點的耐心，協助讀者把議題放回真實社會條件中重新理解。</p>
+          <p>我們試著把概念放回真實事件、制度背景與青年經驗裡，讓文章不是只有立場，而是能夠真的幫助閱讀者理解。</p>
         </article>
       `
     )
@@ -404,16 +399,9 @@ function renderPaymentGateway(paymentGateway) {
     return;
   }
 
-  if (config.sandbox) {
-    note.textContent = "目前串接的是測試付款流程，送出後會前往第三方付款測試頁。";
-    return;
-  }
-
-  const methods = Array.isArray(config.methods)
-    ? config.methods.map((item, index) => sanitizeText(item, DEFAULT_CONTENT.paymentGateway.methods[index] || "")).filter(Boolean)
-    : DEFAULT_CONTENT.paymentGateway.methods;
-
-  note.textContent = `第三方付款可使用 ${methods.join("、")}。`;
+  note.textContent = config.sandbox
+    ? "目前串接的是測試付款流程，送出後會前往第三方測試頁。"
+    : `第三方付款支援 ${config.methods.join("、")}。`;
 }
 
 function renderPublications(items) {

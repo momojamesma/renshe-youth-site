@@ -1,25 +1,25 @@
 :root {
-  --bg: #f6f1e8;
-  --bg-deep: #ece3d6;
-  --surface: #f9f4ec;
-  --surface-strong: #fcfaf6;
-  --card: #fbf7f0;
-  --line: rgba(70, 54, 42, 0.14);
-  --line-strong: rgba(70, 54, 42, 0.24);
-  --text: #2b2622;
-  --muted: #6b6158;
-  --accent: #8f5d45;
-  --accent-deep: #744632;
-  --forest: #554b43;
-  --ink: #433b35;
-  --gold: #b48e61;
-  --shadow-soft: 0 8px 20px rgba(49, 38, 30, 0.04);
-  --shadow-card: 0 10px 24px rgba(49, 38, 30, 0.05);
-  --radius-xl: 12px;
-  --radius-lg: 10px;
-  --radius-md: 8px;
-  --radius-sm: 6px;
-  --content-max: 64ch;
+  --bg: #f5f1ea;
+  --bg-deep: #ece5db;
+  --surface: rgba(255, 255, 255, 0.68);
+  --surface-strong: rgba(255, 255, 255, 0.9);
+  --card: rgba(255, 255, 255, 0.74);
+  --line: rgba(26, 31, 44, 0.1);
+  --line-strong: rgba(26, 31, 44, 0.16);
+  --text: #16181d;
+  --muted: #5f6675;
+  --accent: #3f5cff;
+  --accent-deep: #2946df;
+  --forest: #272d39;
+  --ink: #202530;
+  --gold: #8d7451;
+  --shadow-soft: 0 20px 48px rgba(20, 24, 32, 0.05);
+  --shadow-card: 0 24px 54px rgba(20, 24, 32, 0.08);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --content-max: 62ch;
 }
 
 * {
@@ -34,8 +34,10 @@ body {
   margin: 0;
   font-family: "Noto Sans TC", "PingFang TC", sans-serif;
   color: var(--text);
-  line-height: 1.82;
-  background: #f6f1e8;
+  line-height: 1.78;
+  background:
+    radial-gradient(circle at top center, rgba(99, 127, 255, 0.08), transparent 26%),
+    linear-gradient(180deg, #f7f5f2 0%, #f4efe8 44%, #f1ebe3 100%);
 }
 
 body.menu-open {
@@ -47,7 +49,7 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 16%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 18%);
 }
 
 .hidden {
@@ -76,7 +78,7 @@ button {
 .hero,
 .manifesto-strip,
 .admin-shell {
-  width: min(1100px, calc(100% - 40px));
+  width: min(1160px, calc(100% - 40px));
   margin: 0 auto;
 }
 
@@ -89,10 +91,10 @@ button {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(246, 241, 232, 0.96);
-  backdrop-filter: blur(8px);
+  background: rgba(247, 245, 242, 0.78);
+  backdrop-filter: blur(18px);
   box-shadow: none;
-  border-bottom: 1px solid rgba(70, 54, 42, 0.1);
+  border-bottom: 1px solid rgba(26, 31, 44, 0.06);
 }
 
 .theme-block {
@@ -106,13 +108,13 @@ button {
 .theme-donate,
 .theme-publications,
 .theme-about {
-  border-radius: 0;
+  border-radius: var(--radius-lg);
 }
 
 .theme-header,
 .theme-footer {
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-left: 18px;
+  padding-right: 18px;
 }
 
 .theme-header {
@@ -126,27 +128,27 @@ button {
 }
 
 .theme-highlights {
-  --section-bg: rgba(252, 248, 241, 0.7);
+  --section-bg: rgba(255, 255, 255, 0.48);
   --section-text: var(--text);
 }
 
 .theme-donate {
-  --section-bg: rgba(247, 241, 232, 0.8);
+  --section-bg: rgba(255, 255, 255, 0.58);
   --section-text: var(--text);
 }
 
 .theme-publications {
-  --section-bg: rgba(251, 247, 239, 0.78);
+  --section-bg: rgba(255, 255, 255, 0.54);
   --section-text: var(--text);
 }
 
 .theme-about {
-  --section-bg: rgba(246, 239, 228, 0.72);
+  --section-bg: rgba(255, 255, 255, 0.52);
   --section-text: var(--text);
 }
 
 .theme-footer {
-  --section-bg: rgba(239, 231, 220, 0.92);
+  --section-bg: rgba(255, 255, 255, 0.44);
   --section-text: var(--text);
 }
 
@@ -155,12 +157,12 @@ button {
 .theme-donate,
 .theme-publications,
 .theme-about {
-  padding: 28px 0 0;
+  padding: 26px;
 }
 
 .theme-footer {
-  padding-top: 22px;
-  padding-bottom: 22px;
+  padding-top: 28px;
+  padding-bottom: 28px;
 }
 
 .theme-header,
@@ -202,7 +204,7 @@ button {
 }
 
 .brand-lockup h1 {
-  font-size: clamp(1.1rem, 1.9vw, 1.45rem);
+  font-size: clamp(1.1rem, 1.9vw, 1.5rem);
 }
 
 .brand-mark {
@@ -210,11 +212,11 @@ button {
   height: 56px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
-  background: #f2ebe1;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #1e2b4f 0%, #243861 100%);
   box-shadow: none;
-  border: 1px solid rgba(59, 49, 39, 0.08);
-  color: #6b5d50;
+  border: 0;
+  color: #ffffff;
   font-weight: 800;
   letter-spacing: 0.08em;
   overflow: hidden;
@@ -237,9 +239,9 @@ button {
 
 .eyebrow,
 .panel-label {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: none;
   color: var(--muted);
 }
@@ -258,7 +260,7 @@ button {
 }
 
 .desktop-nav {
-  gap: 8px;
+  gap: 10px;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -269,8 +271,8 @@ button {
 .dropdown-toggle,
 .mobile-nav a {
   min-height: 44px;
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 10px 14px;
+  border-radius: 999px;
   font-weight: 700;
   transition:
     background-color 0.2s ease,
@@ -327,8 +329,8 @@ button {
   min-width: 196px;
   padding: 8px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: rgba(255, 253, 249, 0.98);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
   box-shadow: var(--shadow-card);
   opacity: 0;
   visibility: hidden;
@@ -344,7 +346,7 @@ button {
 .dropdown-menu a {
   display: block;
   padding: 12px 14px;
-  border-radius: 6px;
+  border-radius: 12px;
   line-height: 1.35;
   white-space: nowrap;
 }
@@ -357,7 +359,7 @@ button {
 .footer-nav a:hover,
 .button:hover,
 .inline-link:hover {
-  background: rgba(154, 97, 72, 0.08);
+  background: rgba(63, 92, 255, 0.08);
 }
 
 .dropdown:hover .dropdown-menu,
@@ -375,9 +377,9 @@ button {
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.65fr) minmax(260px, 0.75fr);
-  gap: 30px;
-  padding: 34px 0 0;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.8fr);
+  gap: 28px;
+  padding: 34px 0 6px;
 }
 
 .hero-copy,
@@ -389,18 +391,18 @@ button {
 .manifesto-card {
   border: 1px solid var(--line);
   background: var(--surface);
-  box-shadow: none;
+  box-shadow: var(--shadow-soft);
   backdrop-filter: none;
 }
 
 .hero-copy {
   position: relative;
   overflow: hidden;
-  padding: clamp(18px, 3vw, 28px) 0 26px;
-  border-radius: 0;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid rgba(70, 54, 42, 0.16);
+  padding: clamp(32px, 4vw, 52px);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.78) 100%);
+  border: 1px solid rgba(26, 31, 44, 0.06);
 }
 
 .hero-copy::after {
@@ -419,18 +421,18 @@ button {
   min-height: 36px;
   padding: 7px 12px;
   border-radius: 999px;
-  background: #efe5d9;
-  color: var(--forest);
+  background: rgba(63, 92, 255, 0.08);
+  color: var(--accent-deep);
   font-size: 0.88rem;
   font-weight: 700;
 }
 
 .hero-copy h2 {
   max-width: 10ch;
-  font-size: clamp(2.15rem, 4.8vw, 3.6rem);
-  line-height: 1.22;
-  margin: 22px 0 18px;
-  letter-spacing: -0.015em;
+  font-size: clamp(2.5rem, 5.6vw, 4.6rem);
+  line-height: 1.08;
+  margin: 24px 0 18px;
+  letter-spacing: -0.03em;
 }
 
 .hero-copy p,
@@ -459,8 +461,8 @@ button {
 
 #hero-mission {
   max-width: var(--content-max);
-  color: rgba(43, 38, 34, 0.8);
-  font-size: 1.08rem;
+  color: rgba(22, 24, 29, 0.72);
+  font-size: 1.06rem;
 }
 
 .theme-list,
@@ -475,7 +477,7 @@ button {
 .theme-list {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
   margin-top: 24px;
 }
 
@@ -484,11 +486,10 @@ button {
   display: inline-flex;
   align-items: center;
   min-height: 34px;
-  padding: 6px 0;
-  border-radius: 0;
-  border: 0;
-  border-bottom: 1px solid rgba(70, 54, 42, 0.12);
-  background: transparent;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(26, 31, 44, 0.08);
+  background: rgba(255, 255, 255, 0.76);
   color: var(--ink);
   font-size: 0.88rem;
 }
@@ -510,8 +511,8 @@ button {
   align-items: center;
   justify-content: center;
   min-height: 48px;
-  padding: 12px 22px;
-  border-radius: 6px;
+  padding: 12px 24px;
+  border-radius: 999px;
   border: 1px solid var(--line-strong);
   font-weight: 700;
   cursor: pointer;
@@ -527,26 +528,26 @@ button {
 .button.primary {
   background: var(--accent);
   color: #fff;
+  border-color: transparent;
   box-shadow: none;
 }
 
 .button.secondary {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.78);
 }
 
 .hero-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
   margin-top: 30px;
 }
 
 .hero-stats article {
-  padding: 18px 0 0;
-  border-radius: 0;
-  border: 0;
-  border-top: 1px solid rgba(70, 54, 42, 0.12);
-  background: transparent;
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(26, 31, 44, 0.06);
+  background: rgba(255, 255, 255, 0.66);
 }
 
 .hero-stats strong,
@@ -576,13 +577,13 @@ button {
 
 .hero-panel,
 .donation-card {
-  padding: 24px;
+  padding: 28px;
 }
 
 .hero-panel {
-  background: rgba(250, 246, 239, 0.92);
+  background: rgba(255, 255, 255, 0.78);
   color: var(--text);
-  box-shadow: none;
+  box-shadow: var(--shadow-card);
 }
 
 .hero-panel .panel-label,
@@ -612,9 +613,9 @@ button {
 
 .hero-metrics article {
   padding: 16px 14px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.74);
-  border: 1px solid rgba(111, 98, 86, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(26, 31, 44, 0.06);
 }
 
 .inline-link {
@@ -630,32 +631,31 @@ button {
 .manifesto-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-  margin: 22px auto 54px;
+  gap: 18px;
+  margin: 18px auto 48px;
 }
 
 .manifesto-card {
-  padding: 18px 0 0;
-  background: transparent;
-  border: 0;
-  border-top: 2px solid rgba(143, 93, 69, 0.42);
+  padding: 22px 22px;
+  background: rgba(255, 255, 255, 0.62);
+  border-top: 0;
 }
 
 .section {
-  padding: 68px 0 18px;
+  padding: 60px 0 40px;
 }
 
 .section-heading {
   display: grid;
   gap: 12px;
-  margin-bottom: 30px;
+  margin-bottom: 26px;
   max-width: 44rem;
-  padding-inline: 0;
+  padding-inline: clamp(4px, 1vw, 12px);
 }
 
 .section-heading h2 {
-  font-size: clamp(1.95rem, 4vw, 3rem);
-  line-height: 1.24;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.14;
 }
 
 .section-intro {
@@ -680,23 +680,22 @@ button {
 
 .card-grid article,
 .publication-item {
-  padding: 24px 0 18px;
+  padding: 28px;
 }
 
 .card-grid article {
   position: relative;
-  border: 0;
-  border-top: 1px solid rgba(70, 54, 42, 0.14);
-  background: transparent;
+  border: 1px solid rgba(26, 31, 44, 0.06);
+  background: rgba(255, 255, 255, 0.74);
 }
 
 .card-grid article::before {
   content: "";
   display: block;
-  width: 24px;
+  width: 28px;
   height: 2px;
-  margin-bottom: 16px;
-  border-radius: 0;
+  margin-bottom: 18px;
+  border-radius: 999px;
   background: var(--accent);
 }
 
@@ -709,8 +708,8 @@ button {
 
 .split-section {
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
-  gap: 36px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  gap: 28px;
   align-items: stretch;
 }
 
@@ -719,7 +718,7 @@ button {
   align-content: start;
   gap: 16px;
   max-width: 42rem;
-  padding-inline: 0;
+  padding-inline: clamp(4px, 1vw, 12px);
 }
 
 .bullet-list {
@@ -731,10 +730,10 @@ button {
 
 .bank-transfer-card {
   margin-top: 10px;
-  padding: 18px 20px;
+  padding: 20px 22px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  background: rgba(252, 248, 242, 0.92);
+  background: rgba(255, 255, 255, 0.7);
   box-shadow: none;
 }
 
@@ -775,7 +774,7 @@ button {
 
 .donation-card {
   align-self: start;
-  background: rgba(249, 243, 234, 0.95);
+  background: rgba(255, 255, 255, 0.76);
 }
 
 .donation-card .caption,
@@ -836,7 +835,7 @@ button {
 .donation-preset {
   min-height: 44px;
   padding: 10px 12px;
-  border-radius: 6px;
+  border-radius: 14px;
   border: 1px solid rgba(47, 58, 64, 0.12);
   background: rgba(255, 255, 255, 0.72);
   font-weight: 700;
@@ -863,7 +862,7 @@ button {
 .payment-amount-field input {
   min-height: 48px;
   padding: 12px 14px;
-  border-radius: 6px;
+  border-radius: 14px;
   border: 1px solid rgba(47, 58, 64, 0.12);
   background: rgba(255, 255, 255, 0.78);
 }
@@ -881,10 +880,9 @@ button {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.76);
   box-shadow: none;
-  border: 0;
-  border-top: 1px solid rgba(70, 54, 42, 0.14);
+  border: 1px solid rgba(26, 31, 44, 0.06);
 }
 
 .publication-item p {
@@ -906,22 +904,22 @@ button {
 
 .publication-link {
   margin-top: auto;
-  padding-top: 14px;
+  padding-top: 18px;
   color: var(--forest);
   font-weight: 800;
   align-self: flex-start;
 }
 
 .publication-item .inline-link {
-  min-height: 38px;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
+  min-height: 40px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(63, 92, 255, 0.05);
   color: var(--forest);
 }
 
 .publication-item .inline-link:hover {
-  background: transparent;
+  background: rgba(63, 92, 255, 0.1);
   color: var(--accent-deep);
 }
 
@@ -932,11 +930,11 @@ button {
 }
 
 .publication-detail {
-  padding: 34px 34px 30px;
+  padding: 38px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-xl);
   background: rgba(255, 254, 251, 0.98);
-  box-shadow: none;
+  box-shadow: var(--shadow-soft);
   overflow-wrap: anywhere;
 }
 
@@ -983,16 +981,15 @@ button {
 
 .about-copy {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  gap: 20px;
 }
 
 .about-copy p {
   margin: 0;
-  padding: 18px 0 0;
-  border: 0;
-  border-top: 1px solid rgba(70, 54, 42, 0.14);
-  border-radius: 0;
-  background: transparent;
+  padding: 24px;
+  border: 1px solid rgba(26, 31, 44, 0.06);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.68);
   box-shadow: none;
   line-height: 1.95;
   text-wrap: pretty;
@@ -1001,16 +998,15 @@ button {
 .site-footer {
   margin-top: 28px;
   margin-bottom: 40px;
-  padding: 28px 0 8px;
+  padding: 38px;
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) auto;
   gap: 24px;
   align-items: start;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.56);
   color: var(--text);
   box-shadow: none;
-  border: 0;
-  border-top: 1px solid rgba(70, 54, 42, 0.14);
+  border: 1px solid rgba(26, 31, 44, 0.06);
 }
 
 main section[id],
@@ -1020,7 +1016,7 @@ footer[id] {
 
 .footer-copy {
   max-width: 40rem;
-  padding-inline: 0;
+  padding-inline: clamp(4px, 1vw, 12px);
 }
 
 .footer-meta {
@@ -1376,8 +1372,14 @@ select {
   }
 
   .hero-copy h2 {
-    font-size: clamp(2.3rem, 12vw, 3.2rem);
+    font-size: clamp(1.95rem, 10vw, 2.7rem);
+    line-height: 1.1;
     max-width: 100%;
+  }
+
+  .hero-panel h3 {
+    font-size: clamp(1.7rem, 8vw, 2.2rem);
+    line-height: 1.2;
   }
 
   #hero-mission,
