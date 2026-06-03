@@ -1223,6 +1223,7 @@ select {
 
   .site-header {
     padding: 12px 0;
+    z-index: 240;
   }
 
   .desktop-nav {
