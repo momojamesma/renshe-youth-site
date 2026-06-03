@@ -21,6 +21,13 @@ const ALLOW_TEST_ADMIN =
 const sessions = new Map();
 const instagramProfileCache = new Map();
 const INSTAGRAM_PROFILE_CACHE_TTL_MS = 30 * 1000;
+const ECPAY_TEST_CONFIG = {
+  merchantId: "3002607",
+  hashKey: "pwFHCqoQZGmho4w6",
+  hashIV: "EkRm7iFT261dpevs",
+  checkoutUrl: "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5",
+  queryUrl: "https://payment-stage.ecpay.com.tw/Cashier/QueryTradeInfo/V5"
+};
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -88,6 +95,14 @@ function decodeHtmlEntities(value) {
     .replaceAll("&#13;", "\r");
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
 function normalizeWhitespace(value) {
   return String(value || "")
     .replace(/\s+/g, " ")
@@ -126,6 +141,163 @@ function buildPublicationExcerpt(text, limit = 50) {
   }
 
   return `${normalized.slice(0, limit).trim()}…`;
+}
+
+function getBaseUrl(req) {
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  const protocol =
+    typeof forwardedProto === "string" && forwardedProto.trim()
+      ? forwardedProto.split(",")[0].trim()
+      : process.env.NODE_ENV === "production"
+        ? "https"
+        : "http";
+  return `${protocol}://${req.headers.host}`;
+}
+
+function getEcpayConfig() {
+  const merchantId = process.env.ECPAY_MERCHANT_ID || "";
+  const hashKey = process.env.ECPAY_HASH_KEY || "";
+  const hashIV = process.env.ECPAY_HASH_IV || "";
+  const useProduction =
+    process.env.ECPAY_ENV === "production" &&
+    merchantId &&
+    hashKey &&
+    hashIV;
+
+  if (useProduction) {
+    return {
+      merchantId,
+      hashKey,
+      hashIV,
+      checkoutUrl: "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5",
+      queryUrl: "https://payment.ecpay.com.tw/Cashier/QueryTradeInfo/V5",
+      sandbox: false,
+      enabled: true
+    };
+  }
+
+  return {
+    ...ECPAY_TEST_CONFIG,
+    sandbox: true,
+    enabled: true
+  };
+}
+
+function getPaymentGatewayPublicConfig() {
+  const config = getEcpayConfig();
+  return {
+    provider: "ecpay",
+    enabled: Boolean(config.enabled),
+    sandbox: Boolean(config.sandbox),
+    checkoutPath: "/api/payments/ecpay/checkout",
+    methods: ["信用卡", "ATM", "超商代碼", "超商條碼"]
+  };
+}
+
+function formatEcpayTradeDate(date = new Date()) {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+function createMerchantTradeNo() {
+  const now = new Date();
+  const pad = (value) => String(value).padStart(2, "0");
+  const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}${pad(
+    now.getHours()
+  )}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  const random = crypto.randomBytes(2).toString("hex").toUpperCase();
+  return `RY${timestamp}${random}`.slice(0, 20);
+}
+
+function encodeEcpayValue(value) {
+  return encodeURIComponent(value)
+    .toLowerCase()
+    .replace(/%20/g, "+")
+    .replace(/%2d/g, "-")
+    .replace(/%5f/g, "_")
+    .replace(/%2e/g, ".")
+    .replace(/%21/g, "!")
+    .replace(/%2a/g, "*")
+    .replace(/%28/g, "(")
+    .replace(/%29/g, ")");
+}
+
+function computeEcpayCheckMacValue(payload, hashKey, hashIV) {
+  const sorted = Object.keys(payload)
+    .filter((key) => key !== "CheckMacValue")
+    .sort((left, right) => left.localeCompare(right))
+    .map((key) => `${key}=${payload[key]}`)
+    .join("&");
+
+  const raw = `HashKey=${hashKey}&${sorted}&HashIV=${hashIV}`;
+  const encoded = encodeEcpayValue(raw);
+  return crypto.createHash("sha256").update(encoded).digest("hex").toUpperCase();
+}
+
+function createEcpayDonationOrder(amount, req) {
+  const config = getEcpayConfig();
+  const baseUrl = getBaseUrl(req);
+  const payload = {
+    MerchantID: config.merchantId,
+    MerchantTradeNo: createMerchantTradeNo(),
+    MerchantTradeDate: formatEcpayTradeDate(new Date()),
+    PaymentType: "aio",
+    TotalAmount: Math.max(1, Math.floor(amount)),
+    TradeDesc: "支持人社青年",
+    ItemName: "人社青年募款",
+    ReturnURL: `${baseUrl}/api/payments/ecpay/notify`,
+    ChoosePayment: "ALL",
+    EncryptType: 1,
+    ClientBackURL: `${baseUrl}/#donate`,
+    NeedExtraPaidInfo: "Y",
+    CustomField1: "renshe-youth-site",
+    CustomField2: config.sandbox ? "sandbox" : "production"
+  };
+
+  payload.CheckMacValue = computeEcpayCheckMacValue(payload, config.hashKey, config.hashIV);
+
+  return {
+    config,
+    payload
+  };
+}
+
+function buildAutoSubmitFormHtml(actionUrl, payload) {
+  const fields = Object.entries(payload)
+    .map(
+      ([key, value]) =>
+        `<input type="hidden" name="${escapeHtml(key)}" value="${escapeHtml(String(value))}" />`
+    )
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>正在前往付款頁</title>
+    <style>
+      body { font-family: sans-serif; background:#f7f3ec; color:#243530; display:grid; place-items:center; min-height:100vh; margin:0; padding:24px; }
+      main { max-width:520px; text-align:center; background:#fffaf3; border:1px solid rgba(36,53,48,.08); border-radius:20px; padding:32px 24px; box-shadow:0 18px 44px rgba(36,53,48,.08); }
+      h1 { margin:0 0 12px; font-size:1.5rem; }
+      p { margin:0; line-height:1.8; }
+      button { margin-top:20px; min-height:46px; padding:12px 20px; border-radius:999px; border:0; background:#c77855; color:#fff; font-weight:700; cursor:pointer; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>正在前往付款頁</h1>
+      <p>系統正在為你建立綠界付款訂單，若頁面沒有自動跳轉，請點擊下方按鈕繼續。</p>
+      <form id="ecpay-checkout-form" method="POST" action="${escapeHtml(actionUrl)}">
+        ${fields}
+        <button type="submit">前往付款</button>
+      </form>
+    </main>
+    <script>document.getElementById("ecpay-checkout-form").submit();</script>
+  </body>
+</html>`;
 }
 
 function escapeRegExp(value) {
@@ -904,6 +1076,7 @@ function buildPublicSiteData(siteData) {
   return {
     organization: buildPublicOrganization(siteData.organization || {}),
     donation: siteData.donation || {},
+    paymentGateway: getPaymentGatewayPublicConfig(),
     publications: Array.isArray(siteData.publications)
       ? siteData.publications.map((item) => ({
           id: item.id,
@@ -1054,6 +1227,14 @@ function sendText(res, statusCode, text, headers = {}) {
   res.end(text);
 }
 
+function sendHtml(res, statusCode, html, headers = {}) {
+  res.writeHead(statusCode, {
+    "Content-Type": "text/html; charset=utf-8",
+    ...headers
+  });
+  res.end(html);
+}
+
 function parseBody(req) {
   return new Promise((resolve, reject) => {
     let raw = "";
@@ -1074,6 +1255,22 @@ function parseBody(req) {
       }
 
       try {
+        const contentType = String(req.headers["content-type"] || "").toLowerCase();
+        if (contentType.includes("application/json")) {
+          resolve(JSON.parse(raw));
+          return;
+        }
+
+        if (contentType.includes("application/x-www-form-urlencoded")) {
+          const params = new URLSearchParams(raw);
+          const next = {};
+          for (const [key, value] of params.entries()) {
+            next[key] = value;
+          }
+          resolve(next);
+          return;
+        }
+
         resolve(JSON.parse(raw));
       } catch (error) {
         reject(error);
@@ -1260,6 +1457,48 @@ async function handleApi(req, res, pathname) {
       }, {
         "Cache-Control": "no-store"
       });
+      return true;
+    }
+  }
+
+  if (pathname === "/api/payments/ecpay/checkout" && req.method === "POST") {
+    try {
+      const body = await parseBody(req);
+      const amount = Number(body.amount || 0);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        sendText(res, 400, "Invalid donation amount.");
+        return true;
+      }
+
+      const { config, payload } = createEcpayDonationOrder(amount, req);
+      const html = buildAutoSubmitFormHtml(config.checkoutUrl, payload);
+      sendHtml(res, 200, html, {
+        "Cache-Control": "no-store"
+      });
+      return true;
+    } catch {
+      sendText(res, 400, "Unable to create payment order.");
+      return true;
+    }
+  }
+
+  if (pathname === "/api/payments/ecpay/notify" && req.method === "POST") {
+    try {
+      const body = await parseBody(req);
+      const config = getEcpayConfig();
+      const receivedCheckMacValue = String(body.CheckMacValue || "").toUpperCase();
+      const expectedCheckMacValue = computeEcpayCheckMacValue(body, config.hashKey, config.hashIV);
+
+      if (!receivedCheckMacValue || receivedCheckMacValue !== expectedCheckMacValue) {
+        sendText(res, 400, "CheckMacValue Error");
+        return true;
+      }
+
+      sendText(res, 200, "1|OK");
+      return true;
+    } catch {
+      sendText(res, 400, "Notification Error");
       return true;
     }
   }

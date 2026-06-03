@@ -45,6 +45,13 @@ const DEFAULT_CONTENT = {
       note: "匯款完成後，歡迎透過 Instagram 私訊告知後五碼，方便我們確認與致謝。"
     }
   },
+  paymentGateway: {
+    provider: "ecpay",
+    enabled: true,
+    sandbox: true,
+    checkoutPath: "/api/payments/ecpay/checkout",
+    methods: ["信用卡", "ATM", "超商代碼", "超商條碼"]
+  },
   publications: [
     {
       id: 1,
@@ -236,6 +243,26 @@ function renderDonation(donation) {
   renderBankTransfer(donation?.bankTransfer || DEFAULT_CONTENT.donation.bankTransfer);
 }
 
+function renderPaymentGateway(paymentGateway) {
+  const config = paymentGateway || DEFAULT_CONTENT.paymentGateway;
+  const form = document.getElementById("payment-form");
+  const note = document.getElementById("payment-gateway-note");
+  const submitButton = document.getElementById("payment-submit-button");
+
+  form.action = config.checkoutPath || DEFAULT_CONTENT.paymentGateway.checkoutPath;
+
+  if (!config.enabled) {
+    submitButton.disabled = true;
+    note.textContent = "目前線上付款暫時不可用，請改用匯款方式支持我們。";
+    return;
+  }
+
+  submitButton.disabled = false;
+  note.textContent = config.sandbox
+    ? "目前串接的是綠界測試付款頁，可用來測試流程；要正式收款需切換成正式商家資料。"
+    : `付款將導向第三方金流頁，可使用 ${config.methods.join("、")} 完成付款。`;
+}
+
 function renderPublications(items) {
   const container = document.getElementById("publication-list");
   const publications = Array.isArray(items) && items.length ? items : DEFAULT_CONTENT.publications;
@@ -406,6 +433,37 @@ function renderHeroStats(data) {
     .join("");
 }
 
+function bindDonationPaymentForm() {
+  const amountInput = document.getElementById("payment-amount-input");
+  const presetButtons = Array.from(document.querySelectorAll(".donation-preset"));
+  const form = document.getElementById("payment-form");
+
+  const setActivePreset = (amount) => {
+    presetButtons.forEach((button) => {
+      button.classList.toggle("active", button.dataset.amount === String(amount));
+    });
+  };
+
+  presetButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      amountInput.value = button.dataset.amount || "";
+      setActivePreset(button.dataset.amount || "");
+    });
+  });
+
+  amountInput.addEventListener("input", () => {
+    setActivePreset(amountInput.value.trim());
+  });
+
+  form.addEventListener("submit", (event) => {
+    const amount = Number(amountInput.value || 0);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      event.preventDefault();
+      amountInput.focus();
+    }
+  });
+}
+
 async function loadSite() {
   const response = await fetch("/api/public-site-data");
   if (!response.ok) {
@@ -429,6 +487,7 @@ async function loadSite() {
   renderHeroStats(data);
   renderHighlights(organization.highlights);
   renderDonation(data.donation || DEFAULT_CONTENT.donation);
+  renderPaymentGateway(data.paymentGateway || DEFAULT_CONTENT.paymentGateway);
   renderPublications(data.publications || DEFAULT_CONTENT.publications);
   renderAbout(organization.about);
   renderInstagram(organization.instagram || DEFAULT_CONTENT.organization.instagram);
@@ -520,6 +579,7 @@ function bindScrollReset() {
 
 bindScrollReset();
 bindMobileMenu();
+bindDonationPaymentForm();
 loadSite().catch(() => {
   document.getElementById("hero-title").textContent = DEFAULT_CONTENT.organization.tagline;
   document.getElementById("hero-mission").textContent = DEFAULT_CONTENT.organization.mission;
@@ -527,6 +587,7 @@ loadSite().catch(() => {
   renderHeroStats(DEFAULT_CONTENT);
   renderHighlights(DEFAULT_CONTENT.organization.highlights);
   renderDonation(DEFAULT_CONTENT.donation);
+  renderPaymentGateway(DEFAULT_CONTENT.paymentGateway);
   renderPublications(DEFAULT_CONTENT.publications);
   renderAbout(DEFAULT_CONTENT.organization.about);
   renderInstagram(DEFAULT_CONTENT.organization.instagram);

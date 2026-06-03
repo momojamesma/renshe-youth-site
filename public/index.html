@@ -207,6 +207,21 @@
             </div>
             <p id="progress-caption" class="progress-caption hidden"></p>
             <p class="caption">每一筆支持都會成為刊物製作、內容企劃與青年公共參與工作的基礎。</p>
+
+            <form id="payment-form" class="payment-form" method="POST" action="/api/payments/ecpay/checkout">
+              <div class="donation-presets" role="group" aria-label="建議捐款金額">
+                <button class="donation-preset" type="button" data-amount="300">$300</button>
+                <button class="donation-preset" type="button" data-amount="500">$500</button>
+                <button class="donation-preset" type="button" data-amount="1000">$1,000</button>
+                <button class="donation-preset" type="button" data-amount="2000">$2,000</button>
+              </div>
+              <label class="payment-amount-field">
+                <span>捐款金額</span>
+                <input id="payment-amount-input" name="amount" type="number" min="1" step="1" placeholder="請輸入捐款金額" required />
+              </label>
+              <button id="payment-submit-button" class="button primary payment-submit-button" type="submit">前往付款頁</button>
+              <p id="payment-gateway-note" class="caption"></p>
+            </form>
           </aside>
         </div>
       </section>
