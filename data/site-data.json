@@ -59,6 +59,21 @@
       "note": "匯款後可私訊 Instagram，方便我們確認與致謝。"
     }
   },
+  "paymentGateway": {
+    "provider": "ecpay",
+    "enabled": true,
+    "environment": "sandbox",
+    "merchantId": "",
+    "hashKey": "",
+    "hashIV": "",
+    "methods": [
+      "信用卡",
+      "ATM",
+      "超商代碼",
+      "超商條碼"
+    ],
+    "publicNote": ""
+  },
   "publications": [
     {
       "id": 3,

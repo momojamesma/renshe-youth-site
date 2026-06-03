@@ -20,6 +20,7 @@ const avatarFileMessage = document.getElementById("avatar-file-message");
 const brandMarkTextInput = document.getElementById("brand-mark-text-input");
 const instagramHandleInput = document.getElementById("instagram-handle-input");
 const instagramUrlInput = document.getElementById("instagram-url-input");
+const DEFAULT_PAYMENT_METHODS = ["信用卡", "ATM", "超商代碼", "超商條碼"];
 
 const ADMIN_USERNAME_RULE = /^[A-Za-z0-9._]{1,30}$/;
 const PROTECTED_ADMIN_USERNAME = "renshe_admin";
@@ -45,6 +46,17 @@ function sanitizeText(value, fallback = "") {
 function buildInstagramUrl(handle) {
   const normalizedHandle = String(handle || "").trim().replace(/^@+/, "");
   return normalizedHandle ? `https://www.instagram.com/${normalizedHandle}/` : "";
+}
+
+function normalizePaymentMethods(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeText(item)).filter(Boolean);
+  }
+
+  return String(value || "")
+    .split(/[\n,，]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function buildPublicationExcerpt(text, limit = 50) {
@@ -189,6 +201,22 @@ function getSafeDonation(data) {
   };
 }
 
+function getSafePaymentGateway(data) {
+  const gateway = data?.paymentGateway || {};
+  const methods = normalizePaymentMethods(gateway.methods);
+
+  return {
+    provider: sanitizeText(gateway.provider, "ecpay"),
+    enabled: typeof gateway.enabled === "boolean" ? gateway.enabled : true,
+    environment: gateway.environment === "production" ? "production" : "sandbox",
+    merchantId: sanitizeText(gateway.merchantId),
+    hashKey: sanitizeText(gateway.hashKey),
+    hashIV: sanitizeText(gateway.hashIV),
+    methods: methods.length ? methods : [...DEFAULT_PAYMENT_METHODS],
+    publicNote: sanitizeText(gateway.publicNote)
+  };
+}
+
 function fillForm(data) {
   currentData = {
     ...data,
@@ -198,6 +226,7 @@ function fillForm(data) {
   };
 
   const donation = getSafeDonation(currentData);
+  const paymentGateway = getSafePaymentGateway(currentData);
   const appearance = currentData.organization?.appearance || {};
   const instagram = currentData.organization?.instagram || {};
 
@@ -225,6 +254,15 @@ function fillForm(data) {
   document.getElementById("transfer-account-name-input").value = sanitizeText(donation.bankTransfer.accountName);
   document.getElementById("transfer-account-number-input").value = sanitizeText(donation.bankTransfer.accountNumber);
   document.getElementById("transfer-note-input").value = sanitizeText(donation.bankTransfer.note);
+  document.getElementById("payment-gateway-enabled-input").checked = paymentGateway.enabled;
+  document.getElementById("payment-gateway-provider-input").value =
+    paymentGateway.provider === "ecpay" ? "綠界 ECPay" : paymentGateway.provider;
+  document.getElementById("payment-gateway-environment-input").value = paymentGateway.environment;
+  document.getElementById("payment-gateway-merchant-id-input").value = paymentGateway.merchantId;
+  document.getElementById("payment-gateway-hash-key-input").value = paymentGateway.hashKey;
+  document.getElementById("payment-gateway-hash-iv-input").value = paymentGateway.hashIV;
+  document.getElementById("payment-gateway-methods-input").value = paymentGateway.methods.join(", ");
+  document.getElementById("payment-gateway-note-input").value = paymentGateway.publicNote;
   document.getElementById("instagram-post-url").value = "";
   publicationImportMessage.textContent = "";
   avatarFileMessage.textContent = "";
@@ -291,6 +329,24 @@ function collectDonation() {
       accountNumber: document.getElementById("transfer-account-number-input").value.trim(),
       note: document.getElementById("transfer-note-input").value.trim()
     }
+  };
+}
+
+function collectPaymentGateway() {
+  const methods = normalizePaymentMethods(document.getElementById("payment-gateway-methods-input").value);
+
+  return {
+    ...(currentData.paymentGateway || {}),
+    provider: "ecpay",
+    enabled: document.getElementById("payment-gateway-enabled-input").checked,
+    environment: document.getElementById("payment-gateway-environment-input").value === "production"
+      ? "production"
+      : "sandbox",
+    merchantId: document.getElementById("payment-gateway-merchant-id-input").value.trim(),
+    hashKey: document.getElementById("payment-gateway-hash-key-input").value.trim(),
+    hashIV: document.getElementById("payment-gateway-hash-iv-input").value.trim(),
+    methods: methods.length ? methods : [...DEFAULT_PAYMENT_METHODS],
+    publicNote: document.getElementById("payment-gateway-note-input").value.trim()
   };
 }
 
@@ -363,6 +419,7 @@ dashboardForm.addEventListener("submit", async (event) => {
   const payload = {
     organization: collectOrganization(),
     donation: collectDonation(),
+    paymentGateway: collectPaymentGateway(),
     publications: collectPublications()
   };
 

@@ -184,6 +184,54 @@
           </label>
 
           <div class="section-heading compact">
+            <h2>第三方付款設定</h2>
+            <p class="caption">可設定第三方金流是否啟用、測試或正式環境，以及商家串接所需資料。</p>
+          </div>
+
+          <label class="checkbox-field">
+            <input id="payment-gateway-enabled-input" type="checkbox" />
+            <span>啟用第三方付款</span>
+          </label>
+
+          <div class="admin-grid">
+            <label>
+              金流服務
+              <input id="payment-gateway-provider-input" type="text" value="綠界 ECPay" readonly />
+            </label>
+            <label>
+              環境模式
+              <select id="payment-gateway-environment-input">
+                <option value="sandbox">測試環境</option>
+                <option value="production">正式環境</option>
+              </select>
+            </label>
+            <label>
+              前台付款方式
+              <input id="payment-gateway-methods-input" type="text" placeholder="信用卡, ATM, 超商代碼, 超商條碼" />
+            </label>
+          </div>
+
+          <div class="admin-grid">
+            <label>
+              Merchant ID
+              <input id="payment-gateway-merchant-id-input" type="text" autocomplete="off" />
+            </label>
+            <label>
+              Hash Key
+              <input id="payment-gateway-hash-key-input" type="text" autocomplete="off" />
+            </label>
+            <label>
+              Hash IV
+              <input id="payment-gateway-hash-iv-input" type="text" autocomplete="off" />
+            </label>
+          </div>
+
+          <label>
+            前台付款提示
+            <textarea id="payment-gateway-note-input" rows="3"></textarea>
+          </label>
+
+          <div class="section-heading compact">
             <h2>刊物管理</h2>
             <p class="caption">可新增、刪除與編輯刊物，也可直接由 Instagram 貼文網址匯入刊物草稿。</p>
           </div>

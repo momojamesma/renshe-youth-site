@@ -28,6 +28,7 @@ const ECPAY_TEST_CONFIG = {
   checkoutUrl: "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5",
   queryUrl: "https://payment-stage.ecpay.com.tw/Cashier/QueryTradeInfo/V5"
 };
+const DEFAULT_PAYMENT_METHODS = ["信用卡", "ATM", "超商代碼", "超商條碼"];
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -154,17 +155,37 @@ function getBaseUrl(req) {
   return `${protocol}://${req.headers.host}`;
 }
 
-function getEcpayConfig() {
-  const merchantId = process.env.ECPAY_MERCHANT_ID || "";
-  const hashKey = process.env.ECPAY_HASH_KEY || "";
-  const hashIV = process.env.ECPAY_HASH_IV || "";
-  const useProduction =
-    process.env.ECPAY_ENV === "production" &&
-    merchantId &&
-    hashKey &&
-    hashIV;
+function getStoredPaymentGateway(siteData = {}) {
+  const gateway =
+    siteData && typeof siteData === "object" && siteData.paymentGateway && typeof siteData.paymentGateway === "object"
+      ? siteData.paymentGateway
+      : {};
 
-  if (useProduction) {
+  return {
+    provider: typeof gateway.provider === "string" ? gateway.provider : "ecpay",
+    enabled: typeof gateway.enabled === "boolean" ? gateway.enabled : true,
+    environment: gateway.environment === "production" ? "production" : "sandbox",
+    merchantId: typeof gateway.merchantId === "string" ? gateway.merchantId.trim() : "",
+    hashKey: typeof gateway.hashKey === "string" ? gateway.hashKey.trim() : "",
+    hashIV: typeof gateway.hashIV === "string" ? gateway.hashIV.trim() : "",
+    methods:
+      Array.isArray(gateway.methods) && gateway.methods.length
+        ? gateway.methods.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim())
+        : [...DEFAULT_PAYMENT_METHODS],
+    publicNote: typeof gateway.publicNote === "string" ? gateway.publicNote.trim() : ""
+  };
+}
+
+function getEcpayConfig(siteData = {}) {
+  const storedGateway = getStoredPaymentGateway(siteData);
+  const merchantId = storedGateway.merchantId || process.env.ECPAY_MERCHANT_ID || "";
+  const hashKey = storedGateway.hashKey || process.env.ECPAY_HASH_KEY || "";
+  const hashIV = storedGateway.hashIV || process.env.ECPAY_HASH_IV || "";
+  const wantsProduction =
+    storedGateway.environment === "production" || process.env.ECPAY_ENV === "production";
+  const hasCustomCredentials = merchantId && hashKey && hashIV;
+
+  if (wantsProduction && hasCustomCredentials) {
     return {
       merchantId,
       hashKey,
@@ -172,25 +193,40 @@ function getEcpayConfig() {
       checkoutUrl: "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5",
       queryUrl: "https://payment.ecpay.com.tw/Cashier/QueryTradeInfo/V5",
       sandbox: false,
-      enabled: true
+      enabled: storedGateway.enabled
+    };
+  }
+
+  if (hasCustomCredentials) {
+    return {
+      merchantId,
+      hashKey,
+      hashIV,
+      checkoutUrl: "https://payment-stage.ecpay.com.tw/Cashier/AioCheckOut/V5",
+      queryUrl: "https://payment-stage.ecpay.com.tw/Cashier/QueryTradeInfo/V5",
+      sandbox: true,
+      enabled: storedGateway.enabled
     };
   }
 
   return {
     ...ECPAY_TEST_CONFIG,
     sandbox: true,
-    enabled: true
+    enabled: storedGateway.enabled
   };
 }
 
-function getPaymentGatewayPublicConfig() {
-  const config = getEcpayConfig();
+function getPaymentGatewayPublicConfig(siteData = {}) {
+  const storedGateway = getStoredPaymentGateway(siteData);
+  const config = getEcpayConfig(siteData);
   return {
-    provider: "ecpay",
-    enabled: Boolean(config.enabled),
+    provider: storedGateway.provider,
+    enabled: Boolean(storedGateway.enabled && config.enabled),
     sandbox: Boolean(config.sandbox),
+    environment: config.sandbox ? "sandbox" : "production",
     checkoutPath: "/api/payments/ecpay/checkout",
-    methods: ["信用卡", "ATM", "超商代碼", "超商條碼"]
+    methods: storedGateway.methods.length ? storedGateway.methods : [...DEFAULT_PAYMENT_METHODS],
+    publicNote: storedGateway.publicNote
   };
 }
 
@@ -236,8 +272,8 @@ function computeEcpayCheckMacValue(payload, hashKey, hashIV) {
   return crypto.createHash("sha256").update(encoded).digest("hex").toUpperCase();
 }
 
-function createEcpayDonationOrder(amount, req) {
-  const config = getEcpayConfig();
+function createEcpayDonationOrder(amount, req, siteData = {}) {
+  const config = getEcpayConfig(siteData);
   const baseUrl = getBaseUrl(req);
   const payload = {
     MerchantID: config.merchantId,
@@ -1076,7 +1112,7 @@ function buildPublicSiteData(siteData) {
   return {
     organization: buildPublicOrganization(siteData.organization || {}),
     donation: siteData.donation || {},
-    paymentGateway: getPaymentGatewayPublicConfig(),
+    paymentGateway: getPaymentGatewayPublicConfig(siteData),
     publications: Array.isArray(siteData.publications)
       ? siteData.publications.map((item) => ({
           id: item.id,
@@ -1191,6 +1227,32 @@ function sanitizeDonationInput(current, incoming) {
                 : current.bankTransfer?.note
           }
         : current.bankTransfer
+  };
+}
+
+function sanitizePaymentGatewayInput(current, incoming) {
+  const normalizedCurrent = getStoredPaymentGateway({ paymentGateway: current });
+  if (!incoming || typeof incoming !== "object") {
+    return normalizedCurrent;
+  }
+
+  return {
+    ...normalizedCurrent,
+    provider: typeof incoming.provider === "string" ? incoming.provider : normalizedCurrent.provider,
+    enabled: typeof incoming.enabled === "boolean" ? incoming.enabled : normalizedCurrent.enabled,
+    environment: incoming.environment === "production" ? "production" : "sandbox",
+    merchantId:
+      typeof incoming.merchantId === "string" ? incoming.merchantId.trim() : normalizedCurrent.merchantId,
+    hashKey: typeof incoming.hashKey === "string" ? incoming.hashKey.trim() : normalizedCurrent.hashKey,
+    hashIV: typeof incoming.hashIV === "string" ? incoming.hashIV.trim() : normalizedCurrent.hashIV,
+    methods:
+      Array.isArray(incoming.methods) && incoming.methods.length
+        ? incoming.methods
+            .filter((item) => typeof item === "string" && item.trim())
+            .map((item) => item.trim())
+        : normalizedCurrent.methods,
+    publicNote:
+      typeof incoming.publicNote === "string" ? incoming.publicNote.trim() : normalizedCurrent.publicNote
   };
 }
 
@@ -1465,13 +1527,20 @@ async function handleApi(req, res, pathname) {
     try {
       const body = await parseBody(req);
       const amount = Number(body.amount || 0);
+      const siteData = await readCachedSiteData();
+      const paymentGateway = getPaymentGatewayPublicConfig(siteData);
 
       if (!Number.isFinite(amount) || amount <= 0) {
         sendText(res, 400, "Invalid donation amount.");
         return true;
       }
 
-      const { config, payload } = createEcpayDonationOrder(amount, req);
+      if (!paymentGateway.enabled) {
+        sendText(res, 400, "Payment gateway is disabled.");
+        return true;
+      }
+
+      const { config, payload } = createEcpayDonationOrder(amount, req, siteData);
       const html = buildAutoSubmitFormHtml(config.checkoutUrl, payload);
       sendHtml(res, 200, html, {
         "Cache-Control": "no-store"
@@ -1486,7 +1555,8 @@ async function handleApi(req, res, pathname) {
   if (pathname === "/api/payments/ecpay/notify" && req.method === "POST") {
     try {
       const body = await parseBody(req);
-      const config = getEcpayConfig();
+      const siteData = await readCachedSiteData();
+      const config = getEcpayConfig(siteData);
       const receivedCheckMacValue = String(body.CheckMacValue || "").toUpperCase();
       const expectedCheckMacValue = computeEcpayCheckMacValue(body, config.hashKey, config.hashIV);
 
@@ -1747,6 +1817,7 @@ async function handleApi(req, res, pathname) {
         ...current,
         organization: sanitizeOrganizationInput(current.organization, body.organization),
         donation: sanitizeDonationInput(current.donation, body.donation),
+        paymentGateway: sanitizePaymentGatewayInput(current.paymentGateway, body.paymentGateway),
         publications: sanitizePublicationsInput(current.publications, body.publications)
       };
 

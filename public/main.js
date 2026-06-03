@@ -258,6 +258,11 @@ function renderPaymentGateway(paymentGateway) {
   }
 
   submitButton.disabled = false;
+  if (config.publicNote) {
+    note.textContent = config.publicNote;
+    return;
+  }
+
   note.textContent = config.sandbox
     ? "目前串接的是綠界測試付款頁，可用來測試流程；要正式收款需切換成正式商家資料。"
     : `付款將導向第三方金流頁，可使用 ${config.methods.join("、")} 完成付款。`;
@@ -507,12 +512,16 @@ function bindMobileMenu() {
     toggle.setAttribute("aria-expanded", "false");
     menu.classList.remove("open");
     document.body.classList.remove("menu-open");
+    menu.scrollTo({ top: 0, left: 0, behavior: "auto" });
   };
 
   const setMenuState = (expanded) => {
     toggle.setAttribute("aria-expanded", String(expanded));
     menu.classList.toggle("open", expanded);
     document.body.classList.toggle("menu-open", expanded);
+    if (expanded) {
+      menu.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
   };
 
   toggle.addEventListener("click", () => {
@@ -541,6 +550,8 @@ function bindMobileMenu() {
 
     closeMenu();
   });
+
+  window.addEventListener("hashchange", closeMenu);
 
   window.addEventListener("resize", () => {
     if (window.innerWidth > 900) {
