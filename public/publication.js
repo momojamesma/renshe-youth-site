@@ -109,15 +109,33 @@ function renderContent(content) {
 
 async function loadPublication() {
   const publicationId = getPublicationId();
-  const response = await fetch(`/api/publication?id=${encodeURIComponent(publicationId)}`);
-  if (!response.ok) {
-    throw new Error("Site data load failed");
-  }
-
-  const data = await response.json();
   const fallbackPublication =
     PUBLICATION_DEFAULTS.publications.find((item) => Number(item.id) === publicationId) ||
     PUBLICATION_DEFAULTS.publications[0];
+  let data = null;
+
+  const response = await fetch(`/api/publication?id=${encodeURIComponent(publicationId)}`);
+  if (response.ok) {
+    data = await response.json();
+  } else if (response.status === 404) {
+    const siteDataResponse = await fetch("/api/site-data");
+    if (!siteDataResponse.ok) {
+      throw new Error("Site data load failed");
+    }
+
+    const siteData = await siteDataResponse.json();
+    const publications = Array.isArray(siteData.publications) ? siteData.publications : [];
+    data = {
+      organization: siteData.organization,
+      publication:
+        publications.find((item) => Number(item.id) === publicationId) ||
+        publications[0] ||
+        fallbackPublication
+    };
+  } else {
+    throw new Error("Site data load failed");
+  }
+
   const publication = data.publication || fallbackPublication;
 
   applyBranding(data.organization || PUBLICATION_DEFAULTS.organization);
