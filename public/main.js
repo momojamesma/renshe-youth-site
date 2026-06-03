@@ -123,6 +123,30 @@ function sanitizeList(items, fallback = []) {
   return cleaned.length ? cleaned : fallback;
 }
 
+const FALLBACK_HERO_STATS = [
+  { value: "青年視角", label: "內容切入" },
+  { value: "{count} 篇", label: "網站刊物" },
+  { value: "長文整理", label: "閱讀形式" }
+];
+
+const FALLBACK_MANIFESTO = [
+  {
+    title: "我們怎麼寫",
+    body:
+      "我們不把議題寫成標準答案，而是盡量交代背景、爭點和概念來源，讓讀者知道一個立場是怎麼形成的。"
+  },
+  {
+    title: "我們寫什麼",
+    body:
+      "目前網站內容多集中在社會建構、特權與不平等、轉型正義、自由與霸權等題目，也會隨當下公共事件持續延伸。"
+  },
+  {
+    title: "我們想留下什麼",
+    body:
+      "比起快速表態，我們更想留下可以被回頭閱讀、重新引用、繼續延伸的內容，讓公共參與有更長的生命週期。"
+  }
+];
+
 function formatCurrency(value) {
   return new Intl.NumberFormat("zh-TW", {
     style: "currency",
@@ -252,6 +276,63 @@ function renderAbout(paragraphs) {
   const container = document.getElementById("about-list");
   const list = sanitizeList(paragraphs, DEFAULT_CONTENT.organization.about);
   container.innerHTML = list.map((text) => `<p>${text}</p>`).join("");
+}
+
+function renderHeroStats(items, publicationsCount) {
+  const container = document.getElementById("hero-stats");
+  const count = Number(publicationsCount) || DEFAULT_CONTENT.publications.length;
+  const source = Array.isArray(items) && items.length ? items : FALLBACK_HERO_STATS;
+  const normalizedItems = source.slice(0, 3).map((item, index) => {
+    const fallback = FALLBACK_HERO_STATS[index] || FALLBACK_HERO_STATS[0];
+    const valueSource = typeof item === "object" ? item?.value : item;
+    const labelSource = typeof item === "object" ? item?.label : "";
+
+    return {
+      value: sanitizeText(
+        String(valueSource || "").replaceAll("{count}", String(count)),
+        fallback.value.replace("{count}", String(count))
+      ),
+      label: sanitizeText(labelSource, fallback.label)
+    };
+  });
+
+  container.innerHTML = normalizedItems
+    .map(
+      (item) => `
+        <article>
+          <strong>${item.value}</strong>
+          <span>${item.label}</span>
+        </article>
+      `
+    )
+    .join("");
+}
+
+function renderManifesto(items) {
+  const container = document.getElementById("manifesto-list");
+  if (!container) {
+    return;
+  }
+
+  const source = Array.isArray(items) && items.length ? items : FALLBACK_MANIFESTO;
+  const normalized = source.slice(0, 3).map((item, index) => {
+    const fallback = FALLBACK_MANIFESTO[index] || FALLBACK_MANIFESTO[0];
+    return {
+      title: sanitizeText(item?.title, fallback.title),
+      body: sanitizeText(item?.body, fallback.body)
+    };
+  });
+
+  container.innerHTML = normalized
+    .map(
+      (item) => `
+        <div class="manifesto-card">
+          <p class="panel-label">${item.title}</p>
+          <p>${item.body}</p>
+        </div>
+      `
+    )
+    .join("");
 }
 
 function renderInstagram(instagram) {
@@ -550,7 +631,8 @@ async function initPage() {
   applyBranding(organization);
   renderHero(organization);
   renderThemes(organization.themes);
-  renderHeroStats(publications.length);
+  renderHeroStats(organization.heroStats, publications.length);
+  renderManifesto(organization.manifesto);
   renderHighlights(organization.highlights);
   renderAbout(organization.about);
   renderDonation(donation);
@@ -583,7 +665,8 @@ initPage().catch(() => {
   applyBranding(DEFAULT_CONTENT.organization);
   renderHero(DEFAULT_CONTENT.organization);
   renderThemes(DEFAULT_CONTENT.organization.themes);
-  renderHeroStats(DEFAULT_CONTENT.publications.length);
+  renderHeroStats(DEFAULT_CONTENT.organization.heroStats, DEFAULT_CONTENT.publications.length);
+  renderManifesto(DEFAULT_CONTENT.organization.manifesto);
   renderHighlights(DEFAULT_CONTENT.organization.highlights);
   renderAbout(DEFAULT_CONTENT.organization.about);
   renderDonation(DEFAULT_CONTENT.donation);

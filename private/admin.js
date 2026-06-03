@@ -20,6 +20,28 @@ const avatarFileMessage = document.getElementById("avatar-file-message");
 const brandMarkTextInput = document.getElementById("brand-mark-text-input");
 const instagramHandleInput = document.getElementById("instagram-handle-input");
 const instagramUrlInput = document.getElementById("instagram-url-input");
+const DEFAULT_HERO_STATS = [
+  { value: "青年視角", label: "內容切入" },
+  { value: "{count} 篇", label: "網站刊物" },
+  { value: "長文整理", label: "閱讀形式" }
+];
+const DEFAULT_MANIFESTO = [
+  {
+    title: "我們怎麼寫",
+    body:
+      "我們不把議題寫成標準答案，而是盡量交代背景、爭點和概念來源，讓讀者知道一個立場是怎麼形成的。"
+  },
+  {
+    title: "我們寫什麼",
+    body:
+      "目前網站內容多集中在社會建構、特權與不平等、轉型正義、自由與霸權等題目，也會隨當下公共事件持續延伸。"
+  },
+  {
+    title: "我們想留下什麼",
+    body:
+      "比起快速表態，我們更想留下可以被回頭閱讀、重新引用、繼續延伸的內容，讓公共參與有更長的生命週期。"
+  }
+];
 const DEFAULT_PAYMENT_METHODS = ["信用卡", "ATM", "超商代碼", "超商條碼"];
 
 const ADMIN_USERNAME_RULE = /^[A-Za-z0-9._]{1,30}$/;
@@ -41,6 +63,28 @@ function escapeHtml(value) {
 function sanitizeText(value, fallback = "") {
   const text = String(value ?? "").trim();
   return text || fallback;
+}
+
+function normalizeHeroStats(items) {
+  const source = Array.isArray(items) && items.length ? items : DEFAULT_HERO_STATS;
+  return source.slice(0, 3).map((item, index) => {
+    const fallback = DEFAULT_HERO_STATS[index] || DEFAULT_HERO_STATS[0];
+    return {
+      value: sanitizeText(item?.value, fallback.value),
+      label: sanitizeText(item?.label, fallback.label)
+    };
+  });
+}
+
+function normalizeManifesto(items) {
+  const source = Array.isArray(items) && items.length ? items : DEFAULT_MANIFESTO;
+  return source.slice(0, 3).map((item, index) => {
+    const fallback = DEFAULT_MANIFESTO[index] || DEFAULT_MANIFESTO[0];
+    return {
+      title: sanitizeText(item?.title, fallback.title),
+      body: sanitizeText(item?.body, fallback.body)
+    };
+  });
 }
 
 function buildInstagramUrl(handle) {
@@ -229,6 +273,8 @@ function fillForm(data) {
   const paymentGateway = getSafePaymentGateway(currentData);
   const appearance = currentData.organization?.appearance || {};
   const instagram = currentData.organization?.instagram || {};
+  const heroStats = normalizeHeroStats(currentData.organization?.heroStats);
+  const manifesto = normalizeManifesto(currentData.organization?.manifesto);
 
   document.getElementById("organization-name-input").value = sanitizeText(currentData.organization.name);
   document.getElementById("organization-tagline-input").value = sanitizeText(currentData.organization.tagline);
@@ -244,6 +290,18 @@ function fillForm(data) {
   document.getElementById("highlight-1").value = sanitizeText(currentData.organization.highlights?.[0]);
   document.getElementById("highlight-2").value = sanitizeText(currentData.organization.highlights?.[1]);
   document.getElementById("highlight-3").value = sanitizeText(currentData.organization.highlights?.[2]);
+  document.getElementById("hero-stat-value-1").value = sanitizeText(heroStats[0]?.value);
+  document.getElementById("hero-stat-label-1").value = sanitizeText(heroStats[0]?.label);
+  document.getElementById("hero-stat-value-2").value = sanitizeText(heroStats[1]?.value);
+  document.getElementById("hero-stat-label-2").value = sanitizeText(heroStats[1]?.label);
+  document.getElementById("hero-stat-value-3").value = sanitizeText(heroStats[2]?.value);
+  document.getElementById("hero-stat-label-3").value = sanitizeText(heroStats[2]?.label);
+  document.getElementById("manifesto-title-1").value = sanitizeText(manifesto[0]?.title);
+  document.getElementById("manifesto-body-1").value = sanitizeText(manifesto[0]?.body);
+  document.getElementById("manifesto-title-2").value = sanitizeText(manifesto[1]?.title);
+  document.getElementById("manifesto-body-2").value = sanitizeText(manifesto[1]?.body);
+  document.getElementById("manifesto-title-3").value = sanitizeText(manifesto[2]?.title);
+  document.getElementById("manifesto-body-3").value = sanitizeText(manifesto[2]?.body);
 
   document.getElementById("donation-title-input").value = sanitizeText(donation.title);
   document.getElementById("donation-raised-input").value = donation.raised;
@@ -311,6 +369,34 @@ function collectOrganization() {
       document.getElementById("highlight-1").value.trim(),
       document.getElementById("highlight-2").value.trim(),
       document.getElementById("highlight-3").value.trim()
+    ],
+    heroStats: [
+      {
+        value: document.getElementById("hero-stat-value-1").value.trim(),
+        label: document.getElementById("hero-stat-label-1").value.trim()
+      },
+      {
+        value: document.getElementById("hero-stat-value-2").value.trim(),
+        label: document.getElementById("hero-stat-label-2").value.trim()
+      },
+      {
+        value: document.getElementById("hero-stat-value-3").value.trim(),
+        label: document.getElementById("hero-stat-label-3").value.trim()
+      }
+    ],
+    manifesto: [
+      {
+        title: document.getElementById("manifesto-title-1").value.trim(),
+        body: document.getElementById("manifesto-body-1").value.trim()
+      },
+      {
+        title: document.getElementById("manifesto-title-2").value.trim(),
+        body: document.getElementById("manifesto-body-2").value.trim()
+      },
+      {
+        title: document.getElementById("manifesto-title-3").value.trim(),
+        body: document.getElementById("manifesto-body-3").value.trim()
+      }
     ]
   };
 }

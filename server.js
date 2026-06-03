@@ -1182,6 +1182,8 @@ function sanitizeOrganizationInput(current, incoming) {
         : current.instagram,
     about: Array.isArray(incoming.about) ? incoming.about : current.about,
     highlights: Array.isArray(incoming.highlights) ? incoming.highlights : current.highlights,
+    heroStats: Array.isArray(incoming.heroStats) ? incoming.heroStats : current.heroStats,
+    manifesto: Array.isArray(incoming.manifesto) ? incoming.manifesto : current.manifesto,
     appearance:
       incoming.appearance && typeof incoming.appearance === "object"
         ? {
