@@ -20,6 +20,7 @@ const ALLOW_TEST_ADMIN =
 
 const sessions = new Map();
 const instagramProfileCache = new Map();
+const INSTAGRAM_PROFILE_CACHE_TTL_MS = 30 * 1000;
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -376,7 +377,7 @@ function extractInstagramProfileDescription(html) {
   return "";
 }
 
-async function fetchInstagramProfileStats(reference, fallback = {}) {
+async function fetchInstagramProfileStats(reference, fallback = {}, options = {}) {
   const normalized = normalizeInstagramProfileReference(reference);
   if (!normalized) {
     throw new Error("Invalid Instagram profile reference.");
@@ -384,7 +385,7 @@ async function fetchInstagramProfileStats(reference, fallback = {}) {
 
   const cacheKey = normalized.handle.toLowerCase();
   const cached = instagramProfileCache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) {
+  if (!options.force && cached && cached.expiresAt > Date.now()) {
     return cached.value;
   }
 
@@ -418,7 +419,7 @@ async function fetchInstagramProfileStats(reference, fallback = {}) {
 
   instagramProfileCache.set(cacheKey, {
     value,
-    expiresAt: Date.now() + 1000 * 60 * 10
+    expiresAt: Date.now() + INSTAGRAM_PROFILE_CACHE_TTL_MS
   });
 
   return value;
@@ -1227,15 +1228,23 @@ async function handleApi(req, res, pathname) {
 
   if (pathname === "/api/instagram-profile" && req.method === "GET") {
     const siteData = await readCachedSiteData();
+    const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const fallbackInstagram = siteData.organization?.instagram || {};
-    const requestedReference = new URL(req.url, `http://${req.headers.host}`).searchParams.get("url")
-      || new URL(req.url, `http://${req.headers.host}`).searchParams.get("handle")
+    const requestedReference = requestUrl.searchParams.get("url")
+      || requestUrl.searchParams.get("handle")
       || fallbackInstagram.url
       || fallbackInstagram.handle;
+    const forceRefresh =
+      requestUrl.searchParams.get("refresh") === "1" ||
+      requestUrl.searchParams.get("refresh") === "true";
 
     try {
-      const instagram = await fetchInstagramProfileStats(requestedReference, fallbackInstagram);
-      sendJson(res, 200, { ok: true, instagram });
+      const instagram = await fetchInstagramProfileStats(requestedReference, fallbackInstagram, {
+        force: forceRefresh
+      });
+      sendJson(res, 200, { ok: true, instagram }, {
+        "Cache-Control": "no-store"
+      });
       return true;
     } catch {
       sendJson(res, 200, {
@@ -1248,6 +1257,8 @@ async function handleApi(req, res, pathname) {
           following: fallbackInstagram.following || "-",
           live: false
         }
+      }, {
+        "Cache-Control": "no-store"
       });
       return true;
     }

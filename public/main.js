@@ -294,8 +294,15 @@ function renderInstagram(instagram) {
   document.getElementById("footer-ig-link").textContent = handle;
 }
 
-async function refreshInstagramStats(instagram) {
+let instagramRefreshTimer = null;
+let instagramRefreshInFlight = false;
+
+async function refreshInstagramStats(instagram, options = {}) {
   if (!instagram) {
+    return;
+  }
+
+  if (instagramRefreshInFlight) {
     return;
   }
 
@@ -313,18 +320,56 @@ async function refreshInstagramStats(instagram) {
     return;
   }
 
-  const response = await fetch(`/api/instagram-profile?${params.toString()}`);
-  if (!response.ok) {
-    throw new Error("Instagram stats load failed");
+  if (options.force) {
+    params.set("refresh", "1");
   }
 
-  const payload = await response.json();
-  if (payload?.instagram) {
-    renderInstagram({
-      ...instagram,
-      ...payload.instagram
+  instagramRefreshInFlight = true;
+  try {
+    const response = await fetch(`/api/instagram-profile?${params.toString()}`, {
+      cache: "no-store"
     });
+    if (!response.ok) {
+      throw new Error("Instagram stats load failed");
+    }
+
+    const payload = await response.json();
+    if (payload?.instagram) {
+      renderInstagram({
+        ...instagram,
+        ...payload.instagram
+      });
+    }
+  } finally {
+    instagramRefreshInFlight = false;
   }
+}
+
+function startInstagramAutoRefresh(instagram) {
+  if (!instagram) {
+    return;
+  }
+
+  if (instagramRefreshTimer) {
+    window.clearInterval(instagramRefreshTimer);
+  }
+
+  instagramRefreshTimer = window.setInterval(() => {
+    if (document.hidden) {
+      return;
+    }
+    refreshInstagramStats(instagram).catch(() => {});
+  }, 30 * 1000);
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      refreshInstagramStats(instagram, { force: true }).catch(() => {});
+    }
+  });
+
+  window.addEventListener("focus", () => {
+    refreshInstagramStats(instagram, { force: true }).catch(() => {});
+  });
 }
 
 function renderHeroStats(data) {
@@ -388,6 +433,7 @@ async function loadSite() {
   renderAbout(organization.about);
   renderInstagram(organization.instagram || DEFAULT_CONTENT.organization.instagram);
   refreshInstagramStats(organization.instagram || DEFAULT_CONTENT.organization.instagram).catch(() => {});
+  startInstagramAutoRefresh(organization.instagram || DEFAULT_CONTENT.organization.instagram);
 }
 
 function bindMobileMenu() {
