@@ -362,7 +362,7 @@ function renderHeroStats(data) {
 }
 
 async function loadSite() {
-  const response = await fetch("/api/site-data");
+  const response = await fetch("/api/public-site-data");
   if (!response.ok) {
     throw new Error("Site data load failed");
   }

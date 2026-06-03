@@ -858,6 +858,81 @@ const store = process.env.DATABASE_URL
   ? createPostgresStore(process.env.DATABASE_URL)
   : createFileStore();
 
+const PUBLIC_SITE_CACHE_TTL_MS = 60 * 1000;
+let siteDataCache = {
+  value: null,
+  expiresAt: 0
+};
+
+function invalidateSiteDataCache() {
+  siteDataCache = {
+    value: null,
+    expiresAt: 0
+  };
+}
+
+async function readCachedSiteData() {
+  if (siteDataCache.value && siteDataCache.expiresAt > Date.now()) {
+    return siteDataCache.value;
+  }
+
+  const siteData = await store.readSiteData();
+  siteDataCache = {
+    value: siteData,
+    expiresAt: Date.now() + PUBLIC_SITE_CACHE_TTL_MS
+  };
+  return siteData;
+}
+
+function resolvePublicAvatarUrl(organization = {}) {
+  const avatarUrl = typeof organization.avatarUrl === "string" ? organization.avatarUrl : "";
+  if (avatarUrl.startsWith("data:image/")) {
+    return "/api/brand-avatar";
+  }
+  return avatarUrl;
+}
+
+function buildPublicOrganization(organization = {}) {
+  return {
+    ...organization,
+    avatarUrl: resolvePublicAvatarUrl(organization)
+  };
+}
+
+function buildPublicSiteData(siteData) {
+  return {
+    organization: buildPublicOrganization(siteData.organization || {}),
+    donation: siteData.donation || {},
+    publications: Array.isArray(siteData.publications)
+      ? siteData.publications.map((item) => ({
+          id: item.id,
+          title: item.title,
+          tag: item.tag,
+          description: buildPublicationExcerpt(item.content || item.description || "")
+        }))
+      : []
+  };
+}
+
+function buildPublicPublication(siteData, publicationId) {
+  const publications = Array.isArray(siteData.publications) ? siteData.publications : [];
+  const publication = publications.find((item) => Number(item.id) === Number(publicationId));
+  if (!publication) {
+    return null;
+  }
+
+  return {
+    organization: buildPublicOrganization(siteData.organization || {}),
+    publication: {
+      id: publication.id,
+      title: publication.title,
+      tag: publication.tag,
+      description: buildPublicationExcerpt(publication.content || publication.description || ""),
+      content: publication.content || ""
+    }
+  };
+}
+
 function sanitizeOrganizationInput(current, incoming) {
   if (!incoming || typeof incoming !== "object") {
     return current;
@@ -1057,8 +1132,10 @@ function serveStaticFile(filePath, res) {
     }
 
     const ext = path.extname(filePath).toLowerCase();
+    const isStaticAsset = [".css", ".js", ".png", ".jpg", ".jpeg", ".svg", ".ico"].includes(ext);
     res.writeHead(200, {
-      "Content-Type": MIME_TYPES[ext] || "application/octet-stream"
+      "Content-Type": MIME_TYPES[ext] || "application/octet-stream",
+      "Cache-Control": isStaticAsset ? "public, max-age=3600" : "no-cache"
     });
     res.end(content);
   });
@@ -1095,12 +1172,61 @@ async function handleApi(req, res, pathname) {
   }
 
   if (pathname === "/api/site-data" && req.method === "GET") {
-    sendJson(res, 200, await store.readSiteData());
+    sendJson(res, 200, await readCachedSiteData(), {
+      "Cache-Control": "private, max-age=30"
+    });
+    return true;
+  }
+
+  if (pathname === "/api/public-site-data" && req.method === "GET") {
+    const siteData = await readCachedSiteData();
+    sendJson(res, 200, buildPublicSiteData(siteData), {
+      "Cache-Control": "public, max-age=60, stale-while-revalidate=120"
+    });
+    return true;
+  }
+
+  if (pathname === "/api/publication" && req.method === "GET") {
+    const publicationId = new URL(req.url, `http://${req.headers.host}`).searchParams.get("id");
+    const siteData = await readCachedSiteData();
+    const payload = buildPublicPublication(siteData, publicationId);
+
+    if (!payload) {
+      sendJson(res, 404, { error: "Publication not found." }, {
+        "Cache-Control": "public, max-age=30"
+      });
+      return true;
+    }
+
+    sendJson(res, 200, payload, {
+      "Cache-Control": "public, max-age=60, stale-while-revalidate=120"
+    });
+    return true;
+  }
+
+  if (pathname === "/api/brand-avatar" && req.method === "GET") {
+    const siteData = await readCachedSiteData();
+    const avatarUrl = siteData.organization?.avatarUrl || "";
+    const match = avatarUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+
+    if (!match) {
+      sendText(res, 404, "Not Found");
+      return true;
+    }
+
+    const mimeType = match[1];
+    const bytes = Buffer.from(match[2], "base64");
+    res.writeHead(200, {
+      "Content-Type": mimeType,
+      "Content-Length": bytes.length,
+      "Cache-Control": "public, max-age=3600"
+    });
+    res.end(bytes);
     return true;
   }
 
   if (pathname === "/api/instagram-profile" && req.method === "GET") {
-    const siteData = await store.readSiteData();
+    const siteData = await readCachedSiteData();
     const fallbackInstagram = siteData.organization?.instagram || {};
     const requestedReference = new URL(req.url, `http://${req.headers.host}`).searchParams.get("url")
       || new URL(req.url, `http://${req.headers.host}`).searchParams.get("handle")
@@ -1366,7 +1492,7 @@ async function handleApi(req, res, pathname) {
 
     try {
       const body = await parseBody(req);
-      const current = await store.readSiteData();
+      const current = await readCachedSiteData();
       const nextData = {
         ...current,
         organization: sanitizeOrganizationInput(current.organization, body.organization),
@@ -1375,6 +1501,7 @@ async function handleApi(req, res, pathname) {
       };
 
       await store.writeSiteData(nextData);
+      invalidateSiteDataCache();
       sendJson(res, 200, nextData);
       return true;
     } catch {

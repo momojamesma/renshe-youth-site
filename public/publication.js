@@ -109,7 +109,7 @@ function renderContent(content) {
 
 async function loadPublication() {
   const publicationId = getPublicationId();
-  const response = await fetch("/api/site-data");
+  const response = await fetch(`/api/publication?id=${encodeURIComponent(publicationId)}`);
   if (!response.ok) {
     throw new Error("Site data load failed");
   }
@@ -118,7 +118,7 @@ async function loadPublication() {
   const fallbackPublication =
     PUBLICATION_DEFAULTS.publications.find((item) => Number(item.id) === publicationId) ||
     PUBLICATION_DEFAULTS.publications[0];
-  const publication = (data.publications || []).find((item) => Number(item.id) === publicationId) || fallbackPublication;
+  const publication = data.publication || fallbackPublication;
 
   applyBranding(data.organization || PUBLICATION_DEFAULTS.organization);
 
