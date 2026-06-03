@@ -488,6 +488,12 @@ function initMobileMenu() {
     link.addEventListener("click", closeMenu);
   });
 
+  menu.addEventListener("click", (event) => {
+    if (event.target === menu) {
+      closeMenu();
+    }
+  });
+
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       closeMenu();
