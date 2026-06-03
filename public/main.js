@@ -3,7 +3,7 @@ const DEFAULT_CONTENT = {
     name: "人社青年",
     tagline: "用學生的眼光看人社，用人社的視角看社會",
     mission:
-      "我們由一群關心公共議題的青年組成，持續以貼文、刊物與公開討論整理人文社會議題，讓更多人能在日常裡理解制度、理解社會，也理解自己與公共世界的關係。",
+      "我們是一群關心公共議題的人文社會青年，透過刊物、社群貼文與公共討論，把抽象概念整理成更容易理解、也更接近日常生活的內容。",
     instagram: {
       handle: "@youth.hss",
       url: "https://www.instagram.com/youth.hss/",
@@ -11,16 +11,16 @@ const DEFAULT_CONTENT = {
       posts: "93",
       following: "58"
     },
-    themes: ["公共參與", "社會議題", "人文社會", "青年視角", "知識轉譯"],
+    themes: ["公共參與", "社會議題", "青年觀點", "人文思辨"],
     highlights: [
-      "把複雜的制度與社會議題整理成青年也能快速讀懂的內容。",
-      "用貼文與刊物串連日常觀察、理論概念與公共討論。",
-      "讓更多人從閱讀開始，逐步走向對話、參與與行動。"
+      "把抽象的人文社會概念，轉成青年也能快速理解的內容。",
+      "從新聞事件與公共討論出發，補上脈絡、概念與制度視角。",
+      "讓更多人可以從閱讀開始，逐步進入公共參與的現場。"
     ],
     about: [
-      "人社青年由一群關心公共議題的高中生與大學生組成，希望讓人文社會知識離日常更近，也讓公共參與不再只是少數人的語言。",
-      "我們透過 Instagram、專刊與行動企劃，把抽象的社會議題轉譯成更容易接近的內容，讓理解可以成為討論與參與的起點。",
-      "從社會建構、特權、言論自由到轉型正義，我們持續關注影響社會的核心問題，並嘗試用青年視角提出新的閱讀方式。"
+      "人社青年由對人文社會充滿熱忱的高中生與大學生共同經營，關注青年如何理解社會，也關注青年如何實際參與社會。",
+      "我們希望讓議題不只停留在資訊接收，而能成為對話、思考與行動的起點，讓更多人願意靠近那些原本覺得困難的概念。",
+      "無論是刊物、貼文或募款支持，都是為了讓這個平台可以更穩定地整理內容、累積觀點，並與更多讀者建立長期關係。"
     ],
     appearance: {
       brandMarkText: "RY"
@@ -29,20 +29,20 @@ const DEFAULT_CONTENT = {
   donation: {
     title: "支持人社青年",
     summary:
-      "你的支持會成為刊物製作、議題整理、社群內容經營與青年公共參與工作的基礎，幫助我們把更多重要議題帶進公共討論。",
-    showTarget: true,
+      "你的支持會成為內容製作、平台維運與青年公共參與行動的基礎，讓更多議題能被穩定整理，也讓更多人有機會在這裡開始理解社會。",
+    showTarget: false,
     target: 500000,
     raised: 186400,
     accounts: [
-      "支持專刊企劃、議題整理與設計製作。",
-      "支持青年公共參與活動與社群內容經營。",
-      "支持人社青年長期穩定運作與合作計畫。"
+      "支持刊物製作、社群內容整理與網站維運。",
+      "幫助青年團隊持續進行公共議題轉譯與知識整理。",
+      "讓更多人能透過閱讀、討論與參與，接近公共議題。"
     ],
     bankTransfer: {
-      bankName: "玉山銀行",
+      bankName: "郵局",
       accountName: "人社青年",
-      accountNumber: "808-1234-5678-9012",
-      note: "匯款完成後，歡迎透過 Instagram 私訊告知後五碼，方便我們確認與致謝。"
+      accountNumber: "00310530676964",
+      note: "匯款完成後，可透過 Instagram 私訊或其他聯絡方式告知，以利我們後續核對。"
     }
   },
   paymentGateway: {
@@ -50,52 +50,81 @@ const DEFAULT_CONTENT = {
     enabled: true,
     sandbox: true,
     checkoutPath: "/api/payments/ecpay/checkout",
-    methods: ["信用卡", "ATM", "超商代碼", "超商條碼"]
+    methods: ["信用卡", "ATM", "超商代碼", "超商條碼"],
+    publicNote: ""
   },
   publications: [
     {
       id: 1,
-      title: "專刊 Vol.01｜社會建構如何影響我們理解世界",
-      description:
-        "從日常常見的性別、身份與規範出發，重新理解什麼是社會建構，以及它如何影響我們看待「理所當然」的事。",
+      title: "當我們談社會建構，我們在談什麼？",
       tag: "社會建構",
+      description: "從日常分類與公共論述出發，重新理解那些看似理所當然的社會規則。",
       content:
-        "很多我們以為天生如此、理所當然的事情，其實都深受社會脈絡影響。從性別角色到公共道德，從身分認同到對成功的想像，社會建構塑造了我們理解世界的方式。\n\n當我們談社會建構，不是說一切都不真實，而是提醒自己：我們現在習以為常的規則與分類，往往都是在歷史、文化與權力關係中逐步形成的。\n\n理解這一點的意義，在於我們不必把現況視為唯一可能。當我們開始看見制度與語言如何影響判斷，也就比較能為社會提出新的想像與新的選擇。"
+        "這篇刊物從社會建構論切入，討論我們習以為常的分類與價值判準，是如何在歷史、文化與制度的交互作用下被建立起來。當我們重新看待這些規則，就更能理解公共議題中的衝突，並看見改變的可能。"
     },
     {
       id: 2,
-      title: "專刊 Vol.02｜當我們談特權，到底在談什麼",
-      description:
-        "特權不是單純指責個人，而是幫助我們辨認資源、制度與社會位置如何影響每個人的生活經驗。",
-      tag: "特權",
+      title: "特權不是標籤，而是理解不平等的入口",
+      tag: "不平等",
+      description: "從性別、教育資源與社會位置出發，理解特權如何影響每個人的處境。",
       content:
-        "特權常常讓人不舒服，因為它看起來像是在否定一個人的努力。但更精確地說，特權不是否定努力，而是補充說明：並不是每個人都站在相同的起點上。\n\n性別、階級、教育資源、族群與家庭背景，都可能讓某些人更容易取得機會，也讓另一些人更常面對阻礙。看見特權，不是為了製造罪惡感，而是為了讓制度討論更接近現實。\n\n當我們開始理解特權如何運作，就能更細緻地思考公平、資源分配與公共政策，也比較能把個人經驗放回社會脈絡中理解。"
+        "當我們談特權，不是為了簡化每個人的生命經驗，而是為了看見制度與社會位置如何影響選擇。這篇文章試著把特權從道德指責中抽離，回到公共討論本身，讓我們更有能力理解不平等。"
+    },
+    {
+      id: 3,
+      title: "自由、秩序與討論空間：青年如何面對公共爭議",
+      tag: "公共討論",
+      description: "面對爭議時，我們如何保留討論空間，而不是只剩下立場對撞。",
+      content:
+        "在快速對立的時代，真正困難的往往不是表態，而是留下討論的空間。這篇刊物想談的是，當青年面對公共爭議時，如何同時理解自由、秩序與責任之間的張力，並在現場保持思辨能力。"
+    },
+    {
+      id: 4,
+      title: "從制度觀看事件：為什麼我們需要更慢的理解",
+      tag: "制度觀察",
+      description: "重大事件發生後，除了情緒反應，我們還能如何更完整地理解社會。",
+      content:
+        "一則新聞不會只是一則新聞。它總是連著制度、資源、媒體與社會想像。這篇文章邀請讀者把目光從單一事件拉遠，練習用更慢的速度理解複雜社會，避免讓討論停在表面。"
     }
   ]
 };
 
-function looksCorrupted(value) {
+function isCorruptedText(value) {
   const text = String(value ?? "").trim();
   if (!text) {
     return true;
   }
 
-  return text.includes("�") || /\?[^\s]*\?/.test(text) || text.split("?").length > 3;
+  const suspiciousTokens = ["鈭", "嚗", "", "", "�", "??", "?", "?", "?舀"];
+  if (suspiciousTokens.some((token) => text.includes(token))) {
+    return true;
+  }
+
+  if (!text.includes("http") && text.split("?").length > 3) {
+    return true;
+  }
+
+  return false;
 }
 
 function sanitizeText(value, fallback = "") {
   const text = String(value ?? "").trim();
-  if (!text || looksCorrupted(text)) {
+  if (!text || isCorruptedText(text)) {
     return fallback;
   }
   return text;
 }
 
 function sanitizeList(items, fallback = []) {
-  const list = Array.isArray(items)
-    ? items.map((item) => sanitizeText(item)).filter(Boolean)
-    : [];
-  return list.length ? list : fallback;
+  if (!Array.isArray(items)) {
+    return fallback;
+  }
+
+  const cleaned = items
+    .map((item, index) => sanitizeText(item, fallback[index] || ""))
+    .filter(Boolean);
+
+  return cleaned.length ? cleaned : fallback;
 }
 
 function formatCurrency(value) {
@@ -121,15 +150,31 @@ function buildPublicationExcerpt(text, limit = 50) {
     return normalized;
   }
 
-  const punctuationMatch = normalized.slice(limit).match(/[。！？；.!?]/);
+  const remainder = normalized.slice(limit);
+  const punctuationMatch = remainder.match(/[。！？.!?]/);
   if (punctuationMatch && Number.isFinite(punctuationMatch.index)) {
     const stopIndex = limit + punctuationMatch.index + 1;
-    if (stopIndex <= limit + 18) {
+    if (stopIndex <= limit + 16) {
       return `${normalized.slice(0, stopIndex).trim()}…`;
     }
   }
 
   return `${normalized.slice(0, limit).trim()}…`;
+}
+
+function normalizePublication(item, fallback, index) {
+  const base = fallback || DEFAULT_CONTENT.publications[index] || DEFAULT_CONTENT.publications[0];
+  const title = sanitizeText(item?.title, base.title);
+  const tag = sanitizeText(item?.tag, base.tag);
+  const descriptionSource =
+    sanitizeText(item?.description) || sanitizeText(item?.content) || base.content || base.description;
+
+  return {
+    id: Number(item?.id) || base.id,
+    title,
+    tag,
+    description: buildPublicationExcerpt(descriptionSource, 50)
+  };
 }
 
 function applyBranding(organization) {
@@ -152,152 +197,66 @@ function applyBranding(organization) {
   }
 }
 
-function renderHighlights(items) {
-  const container = document.getElementById("highlight-list");
-  const list = sanitizeList(items, DEFAULT_CONTENT.organization.highlights);
+function renderHero(organization) {
+  document.title = sanitizeText(organization?.name, DEFAULT_CONTENT.organization.name);
+  document.getElementById("hero-title").textContent = sanitizeText(
+    organization?.tagline,
+    DEFAULT_CONTENT.organization.tagline
+  );
+  document.getElementById("hero-mission").textContent = sanitizeText(
+    organization?.mission,
+    DEFAULT_CONTENT.organization.mission
+  );
+}
 
-  container.innerHTML = list
+function renderThemes(items) {
+  const container = document.getElementById("theme-list");
+  const themes = sanitizeList(items, DEFAULT_CONTENT.organization.themes).slice(0, 4);
+  container.innerHTML = themes.map((item) => `<span class="theme-pill">${item}</span>`).join("");
+}
+
+function renderHeroStats(publicationsCount) {
+  const container = document.getElementById("hero-stats");
+  const count = Number(publicationsCount) || DEFAULT_CONTENT.publications.length;
+
+  const items = [
+    { value: "青年視角", label: "內容切入" },
+    { value: `${count} 篇`, label: "站上刊物" },
+    { value: "公共參與", label: "行動方向" }
+  ];
+
+  container.innerHTML = items
     .map(
-      (item, index) => `
+      (item) => `
         <article>
-          <p class="panel-label">Focus 0${index + 1}</p>
-          <h3>${item}</h3>
-          <p>把複雜的社會議題拆解成更容易理解的內容，讓閱讀不只停在知道，而能延伸成判斷與參與。</p>
+          <strong>${item.value}</strong>
+          <span>${item.label}</span>
         </article>
       `
     )
     .join("");
 }
 
-function renderThemes(items) {
-  const container = document.getElementById("theme-list");
-  const list = sanitizeList(items, DEFAULT_CONTENT.organization.themes);
-  container.innerHTML = list.map((item) => `<span class="theme-pill">${item}</span>`).join("");
+function renderHighlights(items) {
+  const container = document.getElementById("highlight-list");
+  const list = sanitizeList(items, DEFAULT_CONTENT.organization.highlights);
+  container.innerHTML = list
+    .map(
+      (item, index) => `
+        <article>
+          <p class="panel-label">Focus 0${index + 1}</p>
+          <h3>${item}</h3>
+          <p>我們用更完整的脈絡、更多一點的耐心，協助讀者把議題放回真實社會條件中重新理解。</p>
+        </article>
+      `
+    )
+    .join("");
 }
 
 function renderAbout(paragraphs) {
   const container = document.getElementById("about-list");
   const list = sanitizeList(paragraphs, DEFAULT_CONTENT.organization.about);
   container.innerHTML = list.map((text) => `<p>${text}</p>`).join("");
-}
-
-function renderBankTransfer(bankTransfer) {
-  const card = document.getElementById("bank-transfer-card");
-  const bankName = sanitizeText(bankTransfer?.bankName);
-  const accountNumber = sanitizeText(bankTransfer?.accountNumber);
-  if (!bankName || !accountNumber) {
-    card.classList.add("hidden");
-    return;
-  }
-
-  document.getElementById("transfer-bank-name").textContent = bankName;
-  document.getElementById("transfer-account-name").textContent = sanitizeText(
-    bankTransfer?.accountName,
-    DEFAULT_CONTENT.donation.bankTransfer.accountName
-  );
-  document.getElementById("transfer-account-number").textContent = accountNumber;
-  document.getElementById("transfer-note").textContent = sanitizeText(
-    bankTransfer?.note,
-    DEFAULT_CONTENT.donation.bankTransfer.note
-  );
-  card.classList.remove("hidden");
-}
-
-function renderDonation(donation) {
-  const targetAmount = document.getElementById("target-amount");
-  const progressCaption = document.getElementById("progress-caption");
-  const progressBar = document.getElementById("progress-bar");
-  const raised = Number(donation?.raised) || DEFAULT_CONTENT.donation.raised;
-  const target = Number(donation?.target) || DEFAULT_CONTENT.donation.target;
-  const showTarget = donation?.showTarget !== false;
-
-  document.getElementById("donation-title").textContent = sanitizeText(
-    donation?.title,
-    DEFAULT_CONTENT.donation.title
-  );
-  document.getElementById("donation-summary").textContent = sanitizeText(
-    donation?.summary,
-    DEFAULT_CONTENT.donation.summary
-  );
-  document.getElementById("raised-amount").textContent = formatCurrency(raised);
-
-  if (showTarget && target > 0) {
-    const progress = Math.min((raised / target) * 100, 100);
-    targetAmount.textContent = `/ ${formatCurrency(target)}`;
-    targetAmount.classList.remove("hidden");
-    progressBar.style.width = `${progress}%`;
-    progressCaption.textContent = `已達成 ${Math.round(progress)}%`;
-    progressCaption.classList.remove("hidden");
-  } else {
-    targetAmount.textContent = "";
-    targetAmount.classList.add("hidden");
-    progressBar.style.width = "100%";
-    progressCaption.textContent = "";
-    progressCaption.classList.add("hidden");
-  }
-
-  const list = document.getElementById("donation-accounts");
-  const accounts = sanitizeList(donation?.accounts, DEFAULT_CONTENT.donation.accounts);
-  list.innerHTML = accounts.map((item) => `<li>${item}</li>`).join("");
-
-  renderBankTransfer(donation?.bankTransfer || DEFAULT_CONTENT.donation.bankTransfer);
-}
-
-function renderPaymentGateway(paymentGateway) {
-  const config = paymentGateway || DEFAULT_CONTENT.paymentGateway;
-  const form = document.getElementById("payment-form");
-  const note = document.getElementById("payment-gateway-note");
-  const submitButton = document.getElementById("payment-submit-button");
-
-  form.action = config.checkoutPath || DEFAULT_CONTENT.paymentGateway.checkoutPath;
-
-  if (!config.enabled) {
-    submitButton.disabled = true;
-    note.textContent = "目前線上付款暫時不可用，請改用匯款方式支持我們。";
-    return;
-  }
-
-  submitButton.disabled = false;
-  if (config.publicNote) {
-    note.textContent = config.publicNote;
-    return;
-  }
-
-  note.textContent = config.sandbox
-    ? "目前串接的是綠界測試付款頁，可用來測試流程；要正式收款需切換成正式商家資料。"
-    : `付款將導向第三方金流頁，可使用 ${config.methods.join("、")} 完成付款。`;
-}
-
-function renderPublications(items) {
-  const container = document.getElementById("publication-list");
-  const publications = Array.isArray(items) && items.length ? items : DEFAULT_CONTENT.publications;
-
-  container.innerHTML = publications
-    .map((item, index) => {
-      const fallback = DEFAULT_CONTENT.publications[index] || DEFAULT_CONTENT.publications[0];
-      const title = sanitizeText(item?.title, fallback.title);
-      const description = buildPublicationExcerpt(
-        sanitizeText(item?.content, fallback.content) || sanitizeText(item?.description, fallback.description)
-      );
-      const tag = sanitizeText(item?.tag, fallback.tag);
-      const id = Number(item?.id) || fallback.id;
-
-      return `
-        <article class="publication-item">
-          <header>
-            <div>
-              <h3>${title}</h3>
-            </div>
-            <div class="publication-meta">
-              ${tag ? `<span class="topic-pill">${tag}</span>` : ""}
-            </div>
-          </header>
-          <p>${description}</p>
-          <a class="inline-link publication-link" href="/publication.html?id=${id}">閱讀完整刊物</a>
-        </article>
-      `;
-    })
-    .join("");
 }
 
 function renderInstagram(instagram) {
@@ -320,148 +279,196 @@ function renderInstagram(instagram) {
     source.following,
     DEFAULT_CONTENT.organization.instagram.following
   );
-  document.getElementById("ig-link").href = profileUrl;
-  document.getElementById("ig-link").textContent = `${handle} 前往 Instagram`;
-  document.getElementById("footer-ig-link").href = profileUrl;
-  document.getElementById("footer-ig-link").textContent = handle;
+
+  const linkTargets = ["ig-link", "footer-ig-link"];
+  linkTargets.forEach((id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.href = profileUrl;
+      if (id === "footer-ig-link") {
+        element.textContent = handle.startsWith("@") ? handle : `@${normalizedHandle}`;
+      }
+    }
+  });
 }
 
-let instagramRefreshTimer = null;
-let instagramRefreshInFlight = false;
-
-async function refreshInstagramStats(instagram, options = {}) {
-  if (!instagram) {
-    return;
-  }
-
-  if (instagramRefreshInFlight) {
-    return;
-  }
-
+async function refreshInstagramStats(organization, force = false) {
+  const fallbackInstagram = organization?.instagram || DEFAULT_CONTENT.organization.instagram;
   const params = new URLSearchParams();
-  const cleanUrl = sanitizeText(instagram.url);
-  const cleanHandle = sanitizeText(instagram.handle);
 
-  if (cleanUrl) {
-    params.set("url", cleanUrl);
-  } else if (cleanHandle) {
-    params.set("handle", cleanHandle);
+  if (fallbackInstagram.url) {
+    params.set("url", fallbackInstagram.url);
+  } else if (fallbackInstagram.handle) {
+    params.set("handle", fallbackInstagram.handle.replace(/^@+/, ""));
   }
 
-  if (![...params.keys()].length) {
-    return;
-  }
-
-  if (options.force) {
+  if (force) {
     params.set("refresh", "1");
   }
 
-  instagramRefreshInFlight = true;
-  try {
-    const response = await fetch(`/api/instagram-profile?${params.toString()}`, {
-      cache: "no-store"
-    });
-    if (!response.ok) {
-      throw new Error("Instagram stats load failed");
-    }
+  const response = await fetch(`/api/instagram-profile?${params.toString()}`, {
+    cache: "no-store"
+  });
 
-    const payload = await response.json();
-    if (payload?.instagram) {
-      renderInstagram({
-        ...instagram,
-        ...payload.instagram
-      });
-    }
-  } finally {
-    instagramRefreshInFlight = false;
+  if (!response.ok) {
+    throw new Error("Instagram stats load failed");
+  }
+
+  const data = await response.json();
+  if (data?.instagram) {
+    renderInstagram(data.instagram);
   }
 }
 
-function startInstagramAutoRefresh(instagram) {
-  if (!instagram) {
+function renderBankTransfer(bankTransfer) {
+  const card = document.getElementById("bank-transfer-card");
+  const bankName = sanitizeText(bankTransfer?.bankName, DEFAULT_CONTENT.donation.bankTransfer.bankName);
+  const accountName = sanitizeText(
+    bankTransfer?.accountName,
+    DEFAULT_CONTENT.donation.bankTransfer.accountName
+  );
+  const accountNumber = sanitizeText(
+    bankTransfer?.accountNumber,
+    DEFAULT_CONTENT.donation.bankTransfer.accountNumber
+  );
+  const note = sanitizeText(bankTransfer?.note, DEFAULT_CONTENT.donation.bankTransfer.note);
+
+  if (!bankName || !accountNumber) {
+    card.classList.add("hidden");
     return;
   }
 
-  if (instagramRefreshTimer) {
-    window.clearInterval(instagramRefreshTimer);
-  }
-
-  instagramRefreshTimer = window.setInterval(() => {
-    if (document.hidden) {
-      return;
-    }
-    refreshInstagramStats(instagram).catch(() => {});
-  }, 30 * 1000);
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      refreshInstagramStats(instagram, { force: true }).catch(() => {});
-    }
-  });
-
-  window.addEventListener("focus", () => {
-    refreshInstagramStats(instagram, { force: true }).catch(() => {});
-  });
+  document.getElementById("transfer-bank-name").textContent = bankName;
+  document.getElementById("transfer-account-name").textContent = accountName;
+  document.getElementById("transfer-account-number").textContent = accountNumber;
+  document.getElementById("transfer-note").textContent = note;
+  card.classList.remove("hidden");
 }
 
-function renderHeroStats(data) {
-  const container = document.getElementById("hero-stats");
-  const target = Number(data.donation?.target) || DEFAULT_CONTENT.donation.target;
-  const raised = Number(data.donation?.raised) || DEFAULT_CONTENT.donation.raised;
-  const progress =
-    data.donation?.showTarget !== false && target > 0 ? Math.round((raised / target) * 100) : null;
+function renderDonation(donation) {
+  const data = donation || DEFAULT_CONTENT.donation;
+  const targetAmount = document.getElementById("target-amount");
+  const progressCaption = document.getElementById("progress-caption");
+  const progressBar = document.getElementById("progress-bar");
+  const raised = Number(data?.raised) || DEFAULT_CONTENT.donation.raised;
+  const target = Number(data?.target) || DEFAULT_CONTENT.donation.target;
+  const showTarget = data?.showTarget === true;
 
-  const stats = [
-    {
-      value: `${sanitizeList(data.organization?.themes, DEFAULT_CONTENT.organization.themes).length}+`,
-      label: "核心議題"
-    },
-    {
-      value: `${(Array.isArray(data.publications) && data.publications.length) || DEFAULT_CONTENT.publications.length}`,
-      label: "刊物篇數"
-    },
-    {
-      value: progress === null ? formatCurrency(raised) : `${progress}%`,
-      label: progress === null ? "目前募得" : "募款進度"
-    }
-  ];
+  document.getElementById("donation-title").textContent = sanitizeText(data?.title, DEFAULT_CONTENT.donation.title);
+  document.getElementById("donation-summary").textContent = sanitizeText(
+    data?.summary,
+    DEFAULT_CONTENT.donation.summary
+  );
+  document.getElementById("raised-amount").textContent = formatCurrency(raised);
 
-  container.innerHTML = stats
-    .map(
-      (item) => `
-        <article>
-          <strong>${item.value}</strong>
-          <span>${item.label}</span>
+  if (showTarget && target > 0) {
+    const progress = Math.min((raised / target) * 100, 100);
+    targetAmount.textContent = `/ ${formatCurrency(target)}`;
+    targetAmount.classList.remove("hidden");
+    progressBar.style.width = `${progress}%`;
+    progressCaption.textContent = `目前達成 ${Math.round(progress)}%`;
+    progressCaption.classList.remove("hidden");
+  } else {
+    targetAmount.textContent = "";
+    targetAmount.classList.add("hidden");
+    progressBar.style.width = "100%";
+    progressCaption.textContent = "";
+    progressCaption.classList.add("hidden");
+  }
+
+  const list = document.getElementById("donation-accounts");
+  const accounts = sanitizeList(data?.accounts, DEFAULT_CONTENT.donation.accounts);
+  list.innerHTML = accounts.map((item) => `<li>${item}</li>`).join("");
+
+  renderBankTransfer(data?.bankTransfer || DEFAULT_CONTENT.donation.bankTransfer);
+}
+
+function renderPaymentGateway(paymentGateway) {
+  const config = paymentGateway || DEFAULT_CONTENT.paymentGateway;
+  const form = document.getElementById("payment-form");
+  const note = document.getElementById("payment-gateway-note");
+  const submitButton = document.getElementById("payment-submit-button");
+
+  form.action = config.checkoutPath || DEFAULT_CONTENT.paymentGateway.checkoutPath;
+
+  if (!config.enabled) {
+    submitButton.disabled = true;
+    note.textContent = "目前暫停第三方付款，若仍想支持我們，可改用匯款方式。";
+    return;
+  }
+
+  submitButton.disabled = false;
+
+  if (sanitizeText(config.publicNote)) {
+    note.textContent = sanitizeText(config.publicNote);
+    return;
+  }
+
+  if (config.sandbox) {
+    note.textContent = "目前串接的是測試付款流程，送出後會前往第三方付款測試頁。";
+    return;
+  }
+
+  const methods = Array.isArray(config.methods)
+    ? config.methods.map((item, index) => sanitizeText(item, DEFAULT_CONTENT.paymentGateway.methods[index] || "")).filter(Boolean)
+    : DEFAULT_CONTENT.paymentGateway.methods;
+
+  note.textContent = `第三方付款可使用 ${methods.join("、")}。`;
+}
+
+function renderPublications(items) {
+  const container = document.getElementById("publication-list");
+  const source = Array.isArray(items) && items.length ? items : DEFAULT_CONTENT.publications;
+
+  container.innerHTML = source
+    .map((item, index) => {
+      const publication = normalizePublication(item, DEFAULT_CONTENT.publications[index], index);
+      return `
+        <article class="publication-item">
+          <header>
+            <div>
+              <h3>${publication.title}</h3>
+            </div>
+            <div class="publication-meta">
+              ${publication.tag ? `<span class="topic-pill">${publication.tag}</span>` : ""}
+            </div>
+          </header>
+          <p>${publication.description}</p>
+          <a class="inline-link publication-link" href="/publication.html?id=${publication.id}">閱讀完整刊物</a>
         </article>
-      `
-    )
+      `;
+    })
     .join("");
 }
 
-function bindDonationPaymentForm() {
+function setSelectedDonationAmount(amount) {
   const amountInput = document.getElementById("payment-amount-input");
-  const presetButtons = Array.from(document.querySelectorAll(".donation-preset"));
+  const presets = Array.from(document.querySelectorAll(".donation-preset"));
+  amountInput.value = amount;
+  presets.forEach((button) => {
+    button.classList.toggle("active", String(button.dataset.amount) === String(amount));
+  });
+}
+
+function initDonationPresets() {
+  const presets = Array.from(document.querySelectorAll(".donation-preset"));
+  const amountInput = document.getElementById("payment-amount-input");
   const form = document.getElementById("payment-form");
 
-  const setActivePreset = (amount) => {
-    presetButtons.forEach((button) => {
-      button.classList.toggle("active", button.dataset.amount === String(amount));
-    });
-  };
-
-  presetButtons.forEach((button) => {
+  presets.forEach((button) => {
     button.addEventListener("click", () => {
-      amountInput.value = button.dataset.amount || "";
-      setActivePreset(button.dataset.amount || "");
+      setSelectedDonationAmount(button.dataset.amount || "");
     });
   });
 
   amountInput.addEventListener("input", () => {
-    setActivePreset(amountInput.value.trim());
+    presets.forEach((button) => {
+      button.classList.toggle("active", String(button.dataset.amount) === String(amountInput.value));
+    });
   });
 
   form.addEventListener("submit", (event) => {
-    const amount = Number(amountInput.value || 0);
+    const amount = Number(amountInput.value);
     if (!Number.isFinite(amount) || amount <= 0) {
       event.preventDefault();
       amountInput.focus();
@@ -469,67 +476,27 @@ function bindDonationPaymentForm() {
   });
 }
 
-async function loadSite() {
-  const response = await fetch("/api/public-site-data");
-  if (!response.ok) {
-    throw new Error("Site data load failed");
-  }
-
-  const data = await response.json();
-  const organization = data.organization || {};
-
-  applyBranding(organization);
-  document.getElementById("hero-title").textContent = sanitizeText(
-    organization.tagline,
-    DEFAULT_CONTENT.organization.tagline
-  );
-  document.getElementById("hero-mission").textContent = sanitizeText(
-    organization.mission,
-    DEFAULT_CONTENT.organization.mission
-  );
-
-  renderThemes(organization.themes);
-  renderHeroStats(data);
-  renderHighlights(organization.highlights);
-  renderDonation(data.donation || DEFAULT_CONTENT.donation);
-  renderPaymentGateway(data.paymentGateway || DEFAULT_CONTENT.paymentGateway);
-  renderPublications(data.publications || DEFAULT_CONTENT.publications);
-  renderAbout(organization.about);
-  renderInstagram(organization.instagram || DEFAULT_CONTENT.organization.instagram);
-  refreshInstagramStats(organization.instagram || DEFAULT_CONTENT.organization.instagram).catch(() => {});
-  startInstagramAutoRefresh(organization.instagram || DEFAULT_CONTENT.organization.instagram);
-}
-
-function bindMobileMenu() {
+function initMobileMenu() {
   const toggle = document.querySelector(".mobile-menu-toggle");
   const menu = document.getElementById("mobile-menu");
   if (!toggle || !menu) {
     return;
   }
 
-  const links = menu.querySelectorAll("a");
-  const closeMenu = () => {
+  function closeMenu() {
     toggle.setAttribute("aria-expanded", "false");
     menu.classList.remove("open");
     document.body.classList.remove("menu-open");
-    menu.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  };
-
-  const setMenuState = (expanded) => {
-    toggle.setAttribute("aria-expanded", String(expanded));
-    menu.classList.toggle("open", expanded);
-    document.body.classList.toggle("menu-open", expanded);
-    if (expanded) {
-      menu.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    }
-  };
+  }
 
   toggle.addEventListener("click", () => {
     const expanded = toggle.getAttribute("aria-expanded") === "true";
-    setMenuState(!expanded);
+    toggle.setAttribute("aria-expanded", String(!expanded));
+    menu.classList.toggle("open", !expanded);
+    document.body.classList.toggle("menu-open", !expanded);
   });
 
-  links.forEach((link) => {
+  menu.querySelectorAll("a").forEach((link) => {
     link.addEventListener("click", closeMenu);
   });
 
@@ -539,20 +506,6 @@ function bindMobileMenu() {
     }
   });
 
-  document.addEventListener("click", (event) => {
-    if (!menu.classList.contains("open")) {
-      return;
-    }
-
-    if (menu.contains(event.target) || toggle.contains(event.target)) {
-      return;
-    }
-
-    closeMenu();
-  });
-
-  window.addEventListener("hashchange", closeMenu);
-
   window.addEventListener("resize", () => {
     if (window.innerWidth > 900) {
       closeMenu();
@@ -560,46 +513,87 @@ function bindMobileMenu() {
   });
 }
 
-function bindScrollReset() {
-  const navigationEntry =
-    typeof performance !== "undefined" && typeof performance.getEntriesByType === "function"
-      ? performance.getEntriesByType("navigation")[0]
-      : null;
-  const navigationType = navigationEntry?.type || "";
-
-  if ("scrollRestoration" in history) {
-    history.scrollRestoration = "manual";
+function initScrollReset() {
+  if ("scrollRestoration" in window.history) {
+    window.history.scrollRestoration = "manual";
   }
-
-  const shouldScrollToTop = navigationType === "reload" || !window.location.hash;
-  if (!shouldScrollToTop) {
-    return;
-  }
-
-  const resetScroll = () => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  };
 
   window.addEventListener("load", () => {
-    resetScroll();
-    requestAnimationFrame(resetScroll);
+    if (!window.location.hash) {
+      window.scrollTo(0, 0);
+    }
   });
-
-  window.addEventListener("pageshow", resetScroll);
 }
 
-bindScrollReset();
-bindMobileMenu();
-bindDonationPaymentForm();
-loadSite().catch(() => {
-  document.getElementById("hero-title").textContent = DEFAULT_CONTENT.organization.tagline;
-  document.getElementById("hero-mission").textContent = DEFAULT_CONTENT.organization.mission;
+async function loadSiteData() {
+  const response = await fetch("/api/public-site-data", { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error("Site data load failed");
+  }
+  return response.json();
+}
+
+async function initPage() {
+  initScrollReset();
+  initMobileMenu();
+  initDonationPresets();
+
+  let data = DEFAULT_CONTENT;
+
+  try {
+    data = await loadSiteData();
+  } catch {
+    data = DEFAULT_CONTENT;
+  }
+
+  const organization = data.organization || DEFAULT_CONTENT.organization;
+  const donation = data.donation || DEFAULT_CONTENT.donation;
+  const paymentGateway = data.paymentGateway || DEFAULT_CONTENT.paymentGateway;
+  const publications = Array.isArray(data.publications) && data.publications.length
+    ? data.publications
+    : DEFAULT_CONTENT.publications;
+
+  applyBranding(organization);
+  renderHero(organization);
+  renderThemes(organization.themes);
+  renderHeroStats(publications.length);
+  renderHighlights(organization.highlights);
+  renderAbout(organization.about);
+  renderDonation(donation);
+  renderPaymentGateway(paymentGateway);
+  renderPublications(publications);
+  renderInstagram(organization.instagram || DEFAULT_CONTENT.organization.instagram);
+
+  try {
+    await refreshInstagramStats(organization, true);
+  } catch {
+    renderInstagram(organization.instagram || DEFAULT_CONTENT.organization.instagram);
+  }
+
+  setInterval(() => {
+    refreshInstagramStats(organization, true).catch(() => {});
+  }, 30000);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      refreshInstagramStats(organization, true).catch(() => {});
+    }
+  });
+
+  window.addEventListener("focus", () => {
+    refreshInstagramStats(organization, true).catch(() => {});
+  });
+}
+
+initPage().catch(() => {
+  applyBranding(DEFAULT_CONTENT.organization);
+  renderHero(DEFAULT_CONTENT.organization);
   renderThemes(DEFAULT_CONTENT.organization.themes);
-  renderHeroStats(DEFAULT_CONTENT);
+  renderHeroStats(DEFAULT_CONTENT.publications.length);
   renderHighlights(DEFAULT_CONTENT.organization.highlights);
+  renderAbout(DEFAULT_CONTENT.organization.about);
   renderDonation(DEFAULT_CONTENT.donation);
   renderPaymentGateway(DEFAULT_CONTENT.paymentGateway);
   renderPublications(DEFAULT_CONTENT.publications);
-  renderAbout(DEFAULT_CONTENT.organization.about);
   renderInstagram(DEFAULT_CONTENT.organization.instagram);
 });
