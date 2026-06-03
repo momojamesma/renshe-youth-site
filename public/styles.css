@@ -1,25 +1,25 @@
 :root {
-  --bg: #f7f4ef;
-  --bg-deep: #ebe4d8;
-  --surface: #fdfbf8;
-  --surface-strong: #fffdfa;
-  --card: #fbf8f3;
-  --line: rgba(59, 49, 39, 0.12);
-  --line-strong: rgba(59, 49, 39, 0.24);
-  --text: #2d2a26;
-  --muted: #72695f;
-  --accent: #9a6148;
-  --accent-deep: #7e4a35;
-  --forest: #64584d;
-  --ink: #51473f;
-  --gold: #b69362;
-  --shadow-soft: 0 10px 26px rgba(39, 31, 24, 0.05);
-  --shadow-card: 0 12px 28px rgba(39, 31, 24, 0.07);
-  --radius-xl: 22px;
-  --radius-lg: 16px;
-  --radius-md: 12px;
-  --radius-sm: 10px;
-  --content-max: 66ch;
+  --bg: #f6f1e8;
+  --bg-deep: #ece3d6;
+  --surface: #f9f4ec;
+  --surface-strong: #fcfaf6;
+  --card: #fbf7f0;
+  --line: rgba(70, 54, 42, 0.14);
+  --line-strong: rgba(70, 54, 42, 0.24);
+  --text: #2b2622;
+  --muted: #6b6158;
+  --accent: #8f5d45;
+  --accent-deep: #744632;
+  --forest: #554b43;
+  --ink: #433b35;
+  --gold: #b48e61;
+  --shadow-soft: 0 8px 20px rgba(49, 38, 30, 0.04);
+  --shadow-card: 0 10px 24px rgba(49, 38, 30, 0.05);
+  --radius-xl: 12px;
+  --radius-lg: 10px;
+  --radius-md: 8px;
+  --radius-sm: 6px;
+  --content-max: 64ch;
 }
 
 * {
@@ -34,8 +34,8 @@ body {
   margin: 0;
   font-family: "Noto Sans TC", "PingFang TC", sans-serif;
   color: var(--text);
-  line-height: 1.78;
-  background: linear-gradient(180deg, #f8f5f0 0%, #f4efe7 100%);
+  line-height: 1.82;
+  background: #f6f1e8;
 }
 
 body.menu-open {
@@ -47,7 +47,7 @@ body::before {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 18%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 16%);
 }
 
 .hidden {
@@ -76,7 +76,7 @@ button {
 .hero,
 .manifesto-strip,
 .admin-shell {
-  width: min(1120px, calc(100% - 32px));
+  width: min(1100px, calc(100% - 40px));
   margin: 0 auto;
 }
 
@@ -85,14 +85,14 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 18px 0 14px;
+  padding: 20px 0 16px;
   position: sticky;
   top: 0;
   z-index: 30;
-  background: rgba(248, 245, 240, 0.96);
-  backdrop-filter: blur(10px);
+  background: rgba(246, 241, 232, 0.96);
+  backdrop-filter: blur(8px);
   box-shadow: none;
-  border-bottom: 1px solid rgba(59, 49, 39, 0.08);
+  border-bottom: 1px solid rgba(70, 54, 42, 0.1);
 }
 
 .theme-block {
@@ -106,13 +106,13 @@ button {
 .theme-donate,
 .theme-publications,
 .theme-about {
-  border-radius: var(--radius-lg);
+  border-radius: 0;
 }
 
 .theme-header,
 .theme-footer {
-  padding-left: 18px;
-  padding-right: 18px;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
 .theme-header {
@@ -126,27 +126,27 @@ button {
 }
 
 .theme-highlights {
-  --section-bg: rgba(255, 253, 249, 0.68);
+  --section-bg: rgba(252, 248, 241, 0.7);
   --section-text: var(--text);
 }
 
 .theme-donate {
-  --section-bg: rgba(250, 246, 240, 0.72);
+  --section-bg: rgba(247, 241, 232, 0.8);
   --section-text: var(--text);
 }
 
 .theme-publications {
-  --section-bg: rgba(255, 253, 249, 0.8);
+  --section-bg: rgba(251, 247, 239, 0.78);
   --section-text: var(--text);
 }
 
 .theme-about {
-  --section-bg: rgba(248, 243, 235, 0.72);
+  --section-bg: rgba(246, 239, 228, 0.72);
   --section-text: var(--text);
 }
 
 .theme-footer {
-  --section-bg: rgba(246, 241, 233, 0.92);
+  --section-bg: rgba(239, 231, 220, 0.92);
   --section-text: var(--text);
 }
 
@@ -155,12 +155,12 @@ button {
 .theme-donate,
 .theme-publications,
 .theme-about {
-  padding: 20px;
+  padding: 28px 0 0;
 }
 
 .theme-footer {
-  padding-top: 28px;
-  padding-bottom: 28px;
+  padding-top: 22px;
+  padding-bottom: 22px;
 }
 
 .theme-header,
@@ -202,7 +202,7 @@ button {
 }
 
 .brand-lockup h1 {
-  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  font-size: clamp(1.1rem, 1.9vw, 1.45rem);
 }
 
 .brand-mark {
@@ -210,7 +210,7 @@ button {
   height: 56px;
   display: grid;
   place-items: center;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #f2ebe1;
   box-shadow: none;
   border: 1px solid rgba(59, 49, 39, 0.08);
@@ -237,10 +237,10 @@ button {
 
 .eyebrow,
 .panel-label {
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-transform: none;
   color: var(--muted);
 }
 
@@ -258,7 +258,7 @@ button {
 }
 
 .desktop-nav {
-  gap: 10px;
+  gap: 8px;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -269,8 +269,8 @@ button {
 .dropdown-toggle,
 .mobile-nav a {
   min-height: 44px;
-  padding: 10px 14px;
-  border-radius: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
   font-weight: 700;
   transition:
     background-color 0.2s ease,
@@ -327,7 +327,7 @@ button {
   min-width: 196px;
   padding: 8px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: rgba(255, 253, 249, 0.98);
   box-shadow: var(--shadow-card);
   opacity: 0;
@@ -344,7 +344,7 @@ button {
 .dropdown-menu a {
   display: block;
   padding: 12px 14px;
-  border-radius: 12px;
+  border-radius: 6px;
   line-height: 1.35;
   white-space: nowrap;
 }
@@ -375,9 +375,9 @@ button {
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr);
-  gap: 22px;
-  padding: 36px 0 6px;
+  grid-template-columns: minmax(0, 1.65fr) minmax(260px, 0.75fr);
+  gap: 30px;
+  padding: 34px 0 0;
 }
 
 .hero-copy,
@@ -389,16 +389,18 @@ button {
 .manifesto-card {
   border: 1px solid var(--line);
   background: var(--surface);
-  box-shadow: var(--shadow-soft);
+  box-shadow: none;
   backdrop-filter: none;
 }
 
 .hero-copy {
   position: relative;
   overflow: hidden;
-  padding: clamp(28px, 4vw, 44px);
-  border-radius: var(--radius-xl);
-  background: var(--surface-strong);
+  padding: clamp(18px, 3vw, 28px) 0 26px;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(70, 54, 42, 0.16);
 }
 
 .hero-copy::after {
@@ -416,8 +418,8 @@ button {
   align-items: center;
   min-height: 36px;
   padding: 7px 12px;
-  border-radius: 9px;
-  background: #f2ebe1;
+  border-radius: 999px;
+  background: #efe5d9;
   color: var(--forest);
   font-size: 0.88rem;
   font-weight: 700;
@@ -425,10 +427,10 @@ button {
 
 .hero-copy h2 {
   max-width: 10ch;
-  font-size: clamp(2.5rem, 5.2vw, 4.1rem);
-  line-height: 1.18;
-  margin: 18px 0 14px;
-  letter-spacing: -0.02em;
+  font-size: clamp(2.15rem, 4.8vw, 3.6rem);
+  line-height: 1.22;
+  margin: 22px 0 18px;
+  letter-spacing: -0.015em;
 }
 
 .hero-copy p,
@@ -457,8 +459,8 @@ button {
 
 #hero-mission {
   max-width: var(--content-max);
-  color: rgba(32, 48, 57, 0.86);
-  font-size: 1.05rem;
+  color: rgba(43, 38, 34, 0.8);
+  font-size: 1.08rem;
 }
 
 .theme-list,
@@ -473,8 +475,8 @@ button {
 .theme-list {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 20px;
+  gap: 12px;
+  margin-top: 24px;
 }
 
 .theme-pill,
@@ -482,10 +484,11 @@ button {
   display: inline-flex;
   align-items: center;
   min-height: 34px;
-  padding: 6px 11px;
-  border-radius: 8px;
-  border: 1px solid rgba(59, 49, 39, 0.12);
-  background: rgba(255, 255, 255, 0.85);
+  padding: 6px 0;
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid rgba(70, 54, 42, 0.12);
+  background: transparent;
   color: var(--ink);
   font-size: 0.88rem;
 }
@@ -498,7 +501,7 @@ button {
 
 .hero-actions {
   gap: 12px;
-  margin-top: 24px;
+  margin-top: 28px;
   flex-wrap: wrap;
 }
 
@@ -507,8 +510,8 @@ button {
   align-items: center;
   justify-content: center;
   min-height: 48px;
-  padding: 12px 24px;
-  border-radius: 10px;
+  padding: 12px 22px;
+  border-radius: 6px;
   border: 1px solid var(--line-strong);
   font-weight: 700;
   cursor: pointer;
@@ -534,15 +537,16 @@ button {
 .hero-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 24px;
+  gap: 12px;
+  margin-top: 30px;
 }
 
 .hero-stats article {
-  padding: 16px 18px;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(47, 72, 85, 0.08);
-  background: rgba(255, 255, 255, 0.66);
+  padding: 18px 0 0;
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid rgba(70, 54, 42, 0.12);
+  background: transparent;
 }
 
 .hero-stats strong,
@@ -572,11 +576,11 @@ button {
 
 .hero-panel,
 .donation-card {
-  padding: 28px;
+  padding: 24px;
 }
 
 .hero-panel {
-  background: #f6f1ea;
+  background: rgba(250, 246, 239, 0.92);
   color: var(--text);
   box-shadow: none;
 }
@@ -616,8 +620,8 @@ button {
 .inline-link {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  margin-top: 18px;
+  min-height: 40px;
+  margin-top: 16px;
   padding: 0 2px;
   color: var(--forest);
   font-weight: 700;
@@ -626,31 +630,32 @@ button {
 .manifesto-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin: 16px auto 42px;
+  gap: 24px;
+  margin: 22px auto 54px;
 }
 
 .manifesto-card {
-  padding: 22px 20px;
-  background: rgba(255, 253, 249, 0.9);
-  border-top: 3px solid rgba(154, 97, 72, 0.45);
+  padding: 18px 0 0;
+  background: transparent;
+  border: 0;
+  border-top: 2px solid rgba(143, 93, 69, 0.42);
 }
 
 .section {
-  padding: 56px 0 44px;
+  padding: 68px 0 18px;
 }
 
 .section-heading {
   display: grid;
   gap: 12px;
-  margin-bottom: 26px;
-  max-width: 46rem;
-  padding-inline: clamp(4px, 1vw, 12px);
+  margin-bottom: 30px;
+  max-width: 44rem;
+  padding-inline: 0;
 }
 
 .section-heading h2 {
-  font-size: clamp(2rem, 4vw, 3.2rem);
-  line-height: 1.18;
+  font-size: clamp(1.95rem, 4vw, 3rem);
+  line-height: 1.24;
 }
 
 .section-intro {
@@ -675,20 +680,23 @@ button {
 
 .card-grid article,
 .publication-item {
-  padding: 24px;
+  padding: 24px 0 18px;
 }
 
 .card-grid article {
   position: relative;
+  border: 0;
+  border-top: 1px solid rgba(70, 54, 42, 0.14);
+  background: transparent;
 }
 
 .card-grid article::before {
   content: "";
   display: block;
-  width: 36px;
+  width: 24px;
   height: 2px;
-  margin-bottom: 18px;
-  border-radius: 2px;
+  margin-bottom: 16px;
+  border-radius: 0;
   background: var(--accent);
 }
 
@@ -701,8 +709,8 @@ button {
 
 .split-section {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
-  gap: 28px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(300px, 0.92fr);
+  gap: 36px;
   align-items: stretch;
 }
 
@@ -711,7 +719,7 @@ button {
   align-content: start;
   gap: 16px;
   max-width: 42rem;
-  padding-inline: clamp(4px, 1vw, 12px);
+  padding-inline: 0;
 }
 
 .bullet-list {
@@ -723,10 +731,10 @@ button {
 
 .bank-transfer-card {
   margin-top: 10px;
-  padding: 20px 22px;
+  padding: 18px 20px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  background: rgba(255, 253, 249, 0.9);
+  background: rgba(252, 248, 242, 0.92);
   box-shadow: none;
 }
 
@@ -767,7 +775,7 @@ button {
 
 .donation-card {
   align-self: start;
-  background: #f8f3ec;
+  background: rgba(249, 243, 234, 0.95);
 }
 
 .donation-card .caption,
@@ -828,7 +836,7 @@ button {
 .donation-preset {
   min-height: 44px;
   padding: 10px 12px;
-  border-radius: 14px;
+  border-radius: 6px;
   border: 1px solid rgba(47, 58, 64, 0.12);
   background: rgba(255, 255, 255, 0.72);
   font-weight: 700;
@@ -855,7 +863,7 @@ button {
 .payment-amount-field input {
   min-height: 48px;
   padding: 12px 14px;
-  border-radius: 14px;
+  border-radius: 6px;
   border: 1px solid rgba(47, 58, 64, 0.12);
   background: rgba(255, 255, 255, 0.78);
 }
@@ -866,14 +874,17 @@ button {
 
 .publication-list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 28px;
 }
 
 .publication-item {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: rgba(255, 254, 251, 0.95);
+  background: transparent;
   box-shadow: none;
+  border: 0;
+  border-top: 1px solid rgba(70, 54, 42, 0.14);
 }
 
 .publication-item p {
@@ -895,35 +906,35 @@ button {
 
 .publication-link {
   margin-top: auto;
-  padding-top: 18px;
+  padding-top: 14px;
   color: var(--forest);
   font-weight: 800;
   align-self: flex-start;
 }
 
 .publication-item .inline-link {
-  min-height: 40px;
-  padding: 10px 14px;
-  border-radius: 9px;
-  background: rgba(244, 237, 228, 0.92);
+  min-height: 38px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--forest);
 }
 
 .publication-item .inline-link:hover {
-  background: rgba(241, 231, 218, 0.98);
-  color: #6b5d50;
+  background: transparent;
+  color: var(--accent-deep);
 }
 
 .publication-page {
   width: min(860px, calc(100% - 32px));
   margin: 0 auto 48px;
-  padding-top: 20px;
+  padding-top: 28px;
 }
 
 .publication-detail {
-  padding: 34px;
+  padding: 34px 34px 30px;
   border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
+  border-radius: 8px;
   background: rgba(255, 254, 251, 0.98);
   box-shadow: none;
   overflow-wrap: anywhere;
@@ -972,14 +983,16 @@ button {
 
 .about-copy {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
 }
 
 .about-copy p {
   margin: 0;
-  padding: 24px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 254, 251, 0.88);
+  padding: 18px 0 0;
+  border: 0;
+  border-top: 1px solid rgba(70, 54, 42, 0.14);
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
   line-height: 1.95;
   text-wrap: pretty;
@@ -988,15 +1001,16 @@ button {
 .site-footer {
   margin-top: 28px;
   margin-bottom: 40px;
-  padding: 38px;
+  padding: 28px 0 8px;
   display: grid;
   grid-template-columns: minmax(0, 1.4fr) auto;
   gap: 24px;
   align-items: start;
-  background: #efe7dc;
+  background: transparent;
   color: var(--text);
   box-shadow: none;
-  border: 1px solid rgba(59, 49, 39, 0.08);
+  border: 0;
+  border-top: 1px solid rgba(70, 54, 42, 0.14);
 }
 
 main section[id],
@@ -1006,7 +1020,7 @@ footer[id] {
 
 .footer-copy {
   max-width: 40rem;
-  padding-inline: clamp(4px, 1vw, 12px);
+  padding-inline: 0;
 }
 
 .footer-meta {
