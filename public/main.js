@@ -7,9 +7,9 @@ const DEFAULT_CONTENT = {
     instagram: {
       handle: "@youth.hss",
       url: "https://www.instagram.com/youth.hss/",
-      followers: "1,486",
-      posts: "93",
-      following: "58"
+      followers: "--",
+      posts: "--",
+      following: "--"
     },
     themes: ["社會建構", "特權與不平等", "自由與霸權", "轉型正義"],
     highlights: [
@@ -368,6 +368,17 @@ function renderInstagram(instagram) {
   });
 }
 
+function buildInstagramPlaceholder(instagram) {
+  const source = instagram || DEFAULT_CONTENT.organization.instagram;
+  return {
+    ...source,
+    followers: "--",
+    posts: "--",
+    following: "--",
+    live: false
+  };
+}
+
 async function refreshInstagramStats(organization, force = false) {
   const fallbackInstagram = organization?.instagram || DEFAULT_CONTENT.organization.instagram;
   const params = new URLSearchParams();
@@ -391,9 +402,12 @@ async function refreshInstagramStats(organization, force = false) {
   }
 
   const data = await response.json();
-  if (data?.instagram) {
+  if (data?.instagram?.live) {
     renderInstagram(data.instagram);
+    return true;
   }
+
+  return false;
 }
 
 function renderBankTransfer(bankTransfer) {
@@ -638,17 +652,15 @@ async function initPage() {
   renderDonation(donation);
   renderPaymentGateway(paymentGateway);
   renderPublications(publications);
-  renderInstagram(organization.instagram || DEFAULT_CONTENT.organization.instagram);
+  renderInstagram(buildInstagramPlaceholder(organization.instagram));
 
   try {
     await refreshInstagramStats(organization, true);
-  } catch {
-    renderInstagram(organization.instagram || DEFAULT_CONTENT.organization.instagram);
-  }
+  } catch {}
 
   setInterval(() => {
     refreshInstagramStats(organization, true).catch(() => {});
-  }, 30000);
+  }, 10000);
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {

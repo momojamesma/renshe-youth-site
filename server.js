@@ -116,6 +116,19 @@ function normalizeLineBreaks(value) {
     .replace(/\r/g, "\n");
 }
 
+function sanitizeStoredText(value, { preserveLineBreaks = false } = {}) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  const cleaned = value
+    .replace(/\u00a0/g, " ")
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, "");
+
+  return preserveLineBreaks ? normalizeLineBreaks(cleaned).trim() : normalizeWhitespace(cleaned);
+}
+
 function buildPublicationExcerpt(text, limit = 50) {
   const normalized = normalizeLineBreaks(text)
     .replace(/\n+/g, " ")
@@ -597,24 +610,21 @@ async function fetchInstagramProfileStats(reference, fallback = {}, options = {}
     return cached.value;
   }
 
-  const response = await fetch(normalized.url, {
-    method: "GET",
-    redirect: "follow",
-    signal: AbortSignal.timeout(8000),
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
-      Accept: "text/html,application/xhtml+xml",
-      "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
-      "Cache-Control": "no-cache"
-    }
-  });
-  if (!response.ok) {
-    throw new Error(`Instagram profile request failed with status ${response.status}.`);
+  let counts = {};
+
+  try {
+    counts = await fetchInstagramProfileCountsFromApi(normalized.handle);
+  } catch {
+    counts = {};
   }
-  const html = await response.text();
-  const description = extractInstagramProfileDescription(html);
-  const counts = parseInstagramProfileCounts(description);
+
+  if (!counts.followers || !counts.posts || !counts.following) {
+    const html = await fetchRemoteText(normalized.url, { timeoutSeconds: 8 });
+    counts = {
+      ...counts,
+      ...extractInstagramCountsFromHtml(html)
+    };
+  }
 
   const value = {
     handle: `@${normalized.handle}`,
@@ -631,6 +641,70 @@ async function fetchInstagramProfileStats(reference, fallback = {}, options = {}
   });
 
   return value;
+}
+
+async function fetchInstagramProfileCountsFromApi(handle) {
+  const username = String(handle || "").replace(/^@+/, "").trim();
+  if (!username) {
+    return {};
+  }
+
+  const response = await fetch(
+    `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`,
+    {
+      method: "GET",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+        Accept: "application/json,text/plain,*/*",
+        "Accept-Language": "zh-TW,zh;q=0.9,en;q=0.8",
+        Referer: `https://www.instagram.com/${username}/`,
+        "X-IG-App-ID": "936619743392459",
+        "Cache-Control": "no-cache"
+      },
+      signal: AbortSignal.timeout(8000)
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Instagram API request failed with status ${response.status}.`);
+  }
+
+  const data = await response.json();
+  const user = data?.data?.user;
+  return {
+    followers: formatInstagramCount(user?.edge_followed_by?.count ?? user?.follower_count),
+    following: formatInstagramCount(user?.edge_follow?.count ?? user?.following_count),
+    posts: formatInstagramCount(user?.edge_owner_to_timeline_media?.count ?? user?.media_count)
+  };
+}
+
+function formatInstagramCount(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return "";
+  }
+
+  return new Intl.NumberFormat("en-US").format(numeric);
+}
+
+function extractInstagramCountsFromHtml(html) {
+  const decoded = decodeHtmlEntities(String(html || ""));
+  const compact = normalizeWhitespace(decoded);
+  const directMatch = compact.match(
+    /([\d.,]+)\s+Followers,\s*([\d.,]+)\s+Following,\s*([\d.,]+)\s+Posts/i
+  );
+
+  if (directMatch) {
+    return {
+      followers: directMatch[1],
+      following: directMatch[2],
+      posts: directMatch[3]
+    };
+  }
+
+  const description = extractInstagramProfileDescription(decoded);
+  return parseInstagramProfileCounts(description);
 }
 
 function derivePublicationFromInstagram(url, source) {
@@ -1102,8 +1176,18 @@ function resolvePublicAvatarUrl(organization = {}) {
 }
 
 function buildPublicOrganization(organization = {}) {
+  const instagram = organization.instagram && typeof organization.instagram === "object"
+    ? {
+        ...organization.instagram,
+        followers: "--",
+        posts: "--",
+        following: "--"
+      }
+    : organization.instagram;
+
   return {
     ...organization,
+    instagram,
     avatarUrl: resolvePublicAvatarUrl(organization)
   };
 }
@@ -1150,9 +1234,11 @@ function sanitizeOrganizationInput(current, incoming) {
 
   return {
     ...current,
-    name: typeof incoming.name === "string" ? incoming.name : current.name,
-    tagline: typeof incoming.tagline === "string" ? incoming.tagline : current.tagline,
-    mission: typeof incoming.mission === "string" ? incoming.mission : current.mission,
+    name: typeof incoming.name === "string" ? sanitizeStoredText(incoming.name) : current.name,
+    tagline:
+      typeof incoming.tagline === "string" ? sanitizeStoredText(incoming.tagline) : current.tagline,
+    mission:
+      typeof incoming.mission === "string" ? sanitizeStoredText(incoming.mission) : current.mission,
     avatarUrl: typeof incoming.avatarUrl === "string" ? incoming.avatarUrl : current.avatarUrl,
     instagram:
       incoming.instagram && typeof incoming.instagram === "object"
@@ -1160,35 +1246,53 @@ function sanitizeOrganizationInput(current, incoming) {
             ...(current.instagram || {}),
             handle:
               typeof incoming.instagram.handle === "string"
-                ? incoming.instagram.handle
+                ? sanitizeStoredText(incoming.instagram.handle)
                 : current.instagram?.handle,
             url:
               typeof incoming.instagram.url === "string"
-                ? incoming.instagram.url
+                ? sanitizeStoredText(incoming.instagram.url)
                 : current.instagram?.url,
             followers:
               typeof incoming.instagram.followers === "string"
-                ? incoming.instagram.followers
+                ? sanitizeStoredText(incoming.instagram.followers)
                 : current.instagram?.followers,
             posts:
               typeof incoming.instagram.posts === "string"
-                ? incoming.instagram.posts
+                ? sanitizeStoredText(incoming.instagram.posts)
                 : current.instagram?.posts,
             following:
               typeof incoming.instagram.following === "string"
-                ? incoming.instagram.following
+                ? sanitizeStoredText(incoming.instagram.following)
                 : current.instagram?.following
           }
         : current.instagram,
-    about: Array.isArray(incoming.about) ? incoming.about : current.about,
-    highlights: Array.isArray(incoming.highlights) ? incoming.highlights : current.highlights,
-    heroStats: Array.isArray(incoming.heroStats) ? incoming.heroStats : current.heroStats,
-    manifesto: Array.isArray(incoming.manifesto) ? incoming.manifesto : current.manifesto,
+    about: Array.isArray(incoming.about)
+      ? incoming.about.map((item) => sanitizeStoredText(item, { preserveLineBreaks: true }))
+      : current.about,
+    highlights: Array.isArray(incoming.highlights)
+      ? incoming.highlights.map((item) => sanitizeStoredText(item, { preserveLineBreaks: true }))
+      : current.highlights,
+    heroStats: Array.isArray(incoming.heroStats)
+      ? incoming.heroStats.map((item) => ({
+          value: sanitizeStoredText(item?.value),
+          label: sanitizeStoredText(item?.label)
+        }))
+      : current.heroStats,
+    manifesto: Array.isArray(incoming.manifesto)
+      ? incoming.manifesto.map((item) => ({
+          title: sanitizeStoredText(item?.title),
+          body: sanitizeStoredText(item?.body, { preserveLineBreaks: true })
+        }))
+      : current.manifesto,
     appearance:
       incoming.appearance && typeof incoming.appearance === "object"
         ? {
-            ...(current.appearance || {}),
-            ...incoming.appearance
+          ...(current.appearance || {}),
+            ...incoming.appearance,
+            brandMarkText:
+              typeof incoming.appearance.brandMarkText === "string"
+                ? sanitizeStoredText(incoming.appearance.brandMarkText)
+                : current.appearance?.brandMarkText
           }
         : current.appearance
   };
@@ -1201,8 +1305,11 @@ function sanitizeDonationInput(current, incoming) {
 
   return {
     ...current,
-    title: typeof incoming.title === "string" ? incoming.title : current.title,
-    summary: typeof incoming.summary === "string" ? incoming.summary : current.summary,
+    title: typeof incoming.title === "string" ? sanitizeStoredText(incoming.title) : current.title,
+    summary:
+      typeof incoming.summary === "string"
+        ? sanitizeStoredText(incoming.summary, { preserveLineBreaks: true })
+        : current.summary,
     raised: Number.isFinite(Number(incoming.raised)) ? Number(incoming.raised) : current.raised,
     target: Number.isFinite(Number(incoming.target)) ? Number(incoming.target) : current.target,
     showTarget:
@@ -1213,19 +1320,19 @@ function sanitizeDonationInput(current, incoming) {
             ...(current.bankTransfer || {}),
             bankName:
               typeof incoming.bankTransfer.bankName === "string"
-                ? incoming.bankTransfer.bankName
+                ? sanitizeStoredText(incoming.bankTransfer.bankName)
                 : current.bankTransfer?.bankName,
             accountName:
               typeof incoming.bankTransfer.accountName === "string"
-                ? incoming.bankTransfer.accountName
+                ? sanitizeStoredText(incoming.bankTransfer.accountName)
                 : current.bankTransfer?.accountName,
             accountNumber:
               typeof incoming.bankTransfer.accountNumber === "string"
-                ? incoming.bankTransfer.accountNumber
+                ? sanitizeStoredText(incoming.bankTransfer.accountNumber)
                 : current.bankTransfer?.accountNumber,
             note:
               typeof incoming.bankTransfer.note === "string"
-                ? incoming.bankTransfer.note
+                ? sanitizeStoredText(incoming.bankTransfer.note, { preserveLineBreaks: true })
                 : current.bankTransfer?.note
           }
         : current.bankTransfer
@@ -1240,21 +1347,34 @@ function sanitizePaymentGatewayInput(current, incoming) {
 
   return {
     ...normalizedCurrent,
-    provider: typeof incoming.provider === "string" ? incoming.provider : normalizedCurrent.provider,
+    provider:
+      typeof incoming.provider === "string"
+        ? sanitizeStoredText(incoming.provider)
+        : normalizedCurrent.provider,
     enabled: typeof incoming.enabled === "boolean" ? incoming.enabled : normalizedCurrent.enabled,
     environment: incoming.environment === "production" ? "production" : "sandbox",
     merchantId:
-      typeof incoming.merchantId === "string" ? incoming.merchantId.trim() : normalizedCurrent.merchantId,
-    hashKey: typeof incoming.hashKey === "string" ? incoming.hashKey.trim() : normalizedCurrent.hashKey,
-    hashIV: typeof incoming.hashIV === "string" ? incoming.hashIV.trim() : normalizedCurrent.hashIV,
+      typeof incoming.merchantId === "string"
+        ? sanitizeStoredText(incoming.merchantId)
+        : normalizedCurrent.merchantId,
+    hashKey:
+      typeof incoming.hashKey === "string"
+        ? sanitizeStoredText(incoming.hashKey)
+        : normalizedCurrent.hashKey,
+    hashIV:
+      typeof incoming.hashIV === "string"
+        ? sanitizeStoredText(incoming.hashIV)
+        : normalizedCurrent.hashIV,
     methods:
       Array.isArray(incoming.methods) && incoming.methods.length
         ? incoming.methods
-            .filter((item) => typeof item === "string" && item.trim())
-            .map((item) => item.trim())
+            .map((item) => sanitizeStoredText(item))
+            .filter(Boolean)
         : normalizedCurrent.methods,
     publicNote:
-      typeof incoming.publicNote === "string" ? incoming.publicNote.trim() : normalizedCurrent.publicNote
+      typeof incoming.publicNote === "string"
+        ? sanitizeStoredText(incoming.publicNote, { preserveLineBreaks: true })
+        : normalizedCurrent.publicNote
   };
 }
 
@@ -1264,12 +1384,12 @@ function sanitizePublicationsInput(current, incoming) {
   }
 
   return incoming.map((item, index) => {
-    const content = typeof item.content === "string" ? item.content : "";
+    const content = sanitizeStoredText(item?.content, { preserveLineBreaks: true });
     return {
       id: Number.isFinite(Number(item.id)) ? Number(item.id) : Date.now() + index,
-      title: typeof item.title === "string" ? item.title : "",
+      title: sanitizeStoredText(item?.title),
       description: buildPublicationExcerpt(content),
-      tag: typeof item.tag === "string" ? item.tag : "",
+      tag: sanitizeStoredText(item?.tag),
       content
     };
   });
@@ -1394,10 +1514,15 @@ function serveStaticFile(filePath, res) {
     }
 
     const ext = path.extname(filePath).toLowerCase();
-    const isStaticAsset = [".css", ".js", ".png", ".jpg", ".jpeg", ".svg", ".ico"].includes(ext);
+    const isCodeAsset = [".css", ".js"].includes(ext);
+    const isMediaAsset = [".png", ".jpg", ".jpeg", ".svg", ".ico"].includes(ext);
     res.writeHead(200, {
       "Content-Type": MIME_TYPES[ext] || "application/octet-stream",
-      "Cache-Control": isStaticAsset ? "public, max-age=3600" : "no-cache"
+      "Cache-Control": isCodeAsset
+        ? "no-store, max-age=0"
+        : isMediaAsset
+          ? "public, max-age=3600"
+          : "no-cache"
     });
     res.end(content);
   });
