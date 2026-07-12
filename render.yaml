@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: renshe-youth-site
-    runtime: node
-    plan: free
-    buildCommand: "npm install"
-    startCommand: "npm start"
-    healthCheckPath: /api/health
-    autoDeploy: true

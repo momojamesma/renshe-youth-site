@@ -1013,9 +1013,13 @@ function createFileStore() {
 
 function createPostgresStore(connectionString) {
   const { Pool } = require("pg");
+  const useSsl =
+    process.env.PGSSLMODE === "require" ||
+    /sslmode=require/i.test(connectionString) ||
+    /supabase\.co|neon\.tech|railway\.app/i.test(connectionString);
   const pool = new Pool({
     connectionString,
-    ssl: connectionString.includes("render.com") ? { rejectUnauthorized: false } : false
+    ssl: useSsl ? { rejectUnauthorized: false } : false
   });
 
   async function seedSiteData() {

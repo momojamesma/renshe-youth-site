@@ -52,43 +52,23 @@ $env:ADMIN_PASSWORD="your_password"
 
 - 網站文字與募款資料：`data/site-data.json`
 
-## 免費網域與部署建議
+## 正式部署
 
-如果要保留這個 Node 後台，最簡單的免費方案是：
+目前專案正式部署路線以 Cloudflare 為主：
 
-- Render 免費 Web Service：可部署 Node 服務，會提供 `*.onrender.com` 免費子網域，但閒置後會休眠。
-- Vercel Hobby：可提供 `*.vercel.app` 免費子網域，適合部署，但這個專案若要保留檔案寫入型後台，需再改成資料庫或外部儲存。
-- Netlify Free：可提供 `*.netlify.app` 免費子網域，靜態頁面很方便，但這個後台同樣需要改成 serverless 或資料庫版本較穩定。
+- Cloudflare Workers：負責 API 與後台路由
+- Cloudflare Assets：提供前端靜態檔案
+- Cloudflare D1：保存網站資料與管理員資料
 
-目前這份專案最適合先部署到 Render 的免費子網域做展示版。
-但要注意：這個專案目前把後台資料寫在本機 JSON 檔，免費主機重啟、重新部署或清理環境後，資料可能不會永久保留。
+部署與設定請直接參考：
 
-## Render 部署
+- [CLOUDFLARE_DEPLOY.md](C:/Users/momo1/Documents/專案/第一次使用/CLOUDFLARE_DEPLOY.md)
 
-這個專案已經補好 `render.yaml`，可直接部署到 Render 的免費 `onrender.com` 子網域。
+## 上線後注意事項
 
-### 部署步驟
-
-1. 把這個專案上傳到 GitHub。
-2. 登入 Render。
-3. 選擇 `New +` -> `Blueprint`。
-4. 連接你的 GitHub repository。
-5. Render 會自動讀取根目錄的 `render.yaml`。
-6. 建立服務後，Render 會提供一個 `*.onrender.com` 網址。
-
-### Render 目前設定
-
-- Runtime: `Node`
-- Plan: `free`
-- Build Command: `npm install`
-- Start Command: `npm start`
-- Health Check: `/api/health`
-
-### 上線後注意事項
-
-- 免費 web service 閒置後可能休眠，第一次打開會稍慢。
-- 目前網站資料仍寫在本機檔案，所以重新部署後，後台新增的管理員與修改的刊物內容可能回到 repo 版本。
-- 若要長期穩定保存資料，下一步建議改接資料庫。
+- 若本機使用 `server.js` 啟動，資料仍可能來自本機 `data/site-data.json`
+- 若部署到 Cloudflare，正式站資料來源會以 D1 為主
+- 若要讓本機與正式站資料保持一致，需同步更新 Cloudflare 端資料
 
 ## 目前限制
 
